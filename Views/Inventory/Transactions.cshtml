@@ -1,0 +1,85 @@
+@model IEnumerable<Warehouse.Models.DTOs.InventoryTransactionDto>
+
+@{
+    ViewData["Title"] = "Transaction History";
+}
+
+<div class="mb-3">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Inventory
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Date</th>
+                <th>Product</th>
+                <th>Warehouse</th>
+                <th>Type</th>
+                <th class="text-end">Qty</th>
+                <th class="text-end">Previous</th>
+                <th class="text-end">New</th>
+                <th>Reference</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">No transactions recorded yet.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var txn in Model)
+                {
+                    <tr>
+                        <td>@txn.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@txn.ProductName</td>
+                        <td>@txn.WarehouseName</td>
+                        <td>
+                            @switch (txn.TransactionType)
+                            {
+                                case Warehouse.Models.Enums.InventoryTransactionType.StockIn:
+                                    <span class="badge bg-success">Stock In</span>
+                                    break;
+                                case Warehouse.Models.Enums.InventoryTransactionType.StockOut:
+                                    <span class="badge bg-warning text-dark">Stock Out</span>
+                                    break;
+                                case Warehouse.Models.Enums.InventoryTransactionType.Transfer:
+                                    <span class="badge bg-info text-dark">Transfer</span>
+                                    break;
+                                case Warehouse.Models.Enums.InventoryTransactionType.Reservation:
+                                    <span class="badge bg-secondary">Reservation</span>
+                                    break;
+                                case Warehouse.Models.Enums.InventoryTransactionType.ReleaseReservation:
+                                    <span class="badge bg-secondary">Release</span>
+                                    break;
+                                case Warehouse.Models.Enums.InventoryTransactionType.Adjustment:
+                                    <span class="badge bg-primary">Adjustment</span>
+                                    break;
+                                case Warehouse.Models.Enums.InventoryTransactionType.PurchaseReceive:
+                                    <span class="badge bg-success">Purchase</span>
+                                    break;
+                                case Warehouse.Models.Enums.InventoryTransactionType.OrderDispatch:
+                                    <span class="badge bg-danger">Dispatch</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-dark">@txn.TransactionType</span>
+                                    break;
+                            }
+                        </td>
+                        <td class="text-end">@txn.Quantity.ToString("N2")</td>
+                        <td class="text-end">@txn.PreviousQuantity.ToString("N2")</td>
+                        <td class="text-end">@txn.NewQuantity.ToString("N2")</td>
+                        <td>@(txn.ReferenceNumber ?? "—")</td>
+                        <td>@(txn.Notes ?? "—")</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

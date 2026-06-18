@@ -1,0 +1,41 @@
+@model Warehouse.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1 class="h2 mb-4">Dashboard</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Products</h6>
+                <h2 class="card-title text-primary">@Model.TotalProducts</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Categories</h6>
+                <h2 class="card-title text-success">@Model.TotalCategories</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Warehouses</h6>
+                <h2 class="card-title text-info">@Model.TotalWarehouses</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Orders</h6>
+                <h2 class="card-title text-warning">@Model.TotalOrders</h2>
+            </div>
+        </div>
+    </div>
+</div>

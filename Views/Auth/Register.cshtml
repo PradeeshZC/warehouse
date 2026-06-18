@@ -1,0 +1,62 @@
+@model Warehouse.Models.DTOs.RegisterDto
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title">Create an account</h4>
+                <form asp-action="Register" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="UserName" class="form-label"></label>
+                            <input asp-for="UserName" class="form-control" />
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+
+                    <div class="mt-3">
+                        <a asp-action="Login">Already have an account? Sign in</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    (function(){
+      document.querySelectorAll('form input').forEach(function(input){
+        input.addEventListener('keydown', function(e){
+          if (e.key === 'Enter') {
+            var type = (input.getAttribute('type') || '').toLowerCase();
+            if (type === 'textarea' || type === 'button' || type === 'submit') return;
+            var form = input.closest('form');
+            if (form) form.submit();
+          }
+        });
+      });
+    })();
+    </script>
+}

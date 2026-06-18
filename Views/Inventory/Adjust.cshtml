@@ -1,0 +1,232 @@
+@{
+    ViewData["Title"] = "Adjust Inventory";
+}
+
+<div class="mb-3">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Inventory
+    </a>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger shadow-sm" role="alert">
+        <h6 class="alert-heading fw-bold">Please correct the following errors:</h6>
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@error.ErrorMessage</div>
+        }
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Stock Adjustment / Transfer</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Adjust" method="post" id="adjustForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row">
+                        <!-- Product Selection -->
+                        <div class="col-md-12 mb-3">
+                            <label for="productId" class="form-label fw-bold">Product <span class="text-danger">*</span></label>
+                            <select name="productId" id="productId" class="form-select" required>
+                                <option value="">-- Select Product --</option>
+                                @if (ViewBag.Products != null)
+                                {
+                                    @foreach (Microsoft.AspNetCore.Mvc.Rendering.SelectListItem item in ViewBag.Products)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Transaction Type -->
+                        <div class="col-md-6 mb-3">
+                            <label for="transactionType" class="form-label fw-bold">Transaction Type <span class="text-danger">*</span></label>
+                            <select name="transactionType" id="transactionType" class="form-select" required>
+                                <option value="">-- Select Type --</option>
+                                @if (ViewBag.TransactionTypes != null)
+                                {
+                                    @foreach (Microsoft.AspNetCore.Mvc.Rendering.SelectListItem item in ViewBag.TransactionTypes)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Quantity -->
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" name="quantity" id="quantity" class="form-control"
+                                   step="0.01" min="0.01" required placeholder="Enter quantity" />
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Source Location Section -->
+                    <h5 class="text-primary mb-3">Source Location</h5>
+                    <div class="row">
+                        <!-- Warehouse -->
+                        <div class="col-md-6 mb-3">
+                            <label for="warehouseEntityId" class="form-label fw-bold">Warehouse <span class="text-danger">*</span></label>
+                            <select name="warehouseEntityId" id="warehouseEntityId" class="form-select" required>
+                                <option value="">-- Select Warehouse --</option>
+                                @if (ViewBag.Warehouses != null)
+                                {
+                                    @foreach (Microsoft.AspNetCore.Mvc.Rendering.SelectListItem item in ViewBag.Warehouses)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Bin Location -->
+                        <div class="col-md-6 mb-3">
+                            <label for="binId" class="form-label fw-bold">Storage Bin</label>
+                            <select name="binId" id="binId" class="form-select" disabled>
+                                <option value="">-- Select Bin --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Destination Location Section (For Transfers Only) -->
+                    <div id="destinationSection" style="display: none;">
+                        <hr class="border-primary" />
+                        <h5 class="text-success mb-3">Destination Location</h5>
+                        <div class="row">
+                            <!-- Destination Warehouse -->
+                            <div class="col-md-6 mb-3">
+                                <label for="destinationWarehouseEntityId" class="form-label fw-bold">Destination Warehouse <span class="text-danger">*</span></label>
+                                <select name="destinationWarehouseEntityId" id="destinationWarehouseEntityId" class="form-select">
+                                    <option value="">-- Select Warehouse --</option>
+                                    @if (ViewBag.Warehouses != null)
+                                    {
+                                        @foreach (Microsoft.AspNetCore.Mvc.Rendering.SelectListItem item in ViewBag.Warehouses)
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Destination Bin -->
+                            <div class="col-md-6 mb-3">
+                                <label for="destinationBinId" class="form-label fw-bold">Destination Storage Bin</label>
+                                <select name="destinationBinId" id="destinationBinId" class="form-select" disabled>
+                                    <option value="">-- Select Bin --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Notes -->
+                    <div class="mb-3">
+                        <label for="notes" class="form-label fw-bold">Notes</label>
+                        <textarea name="notes" id="notes" class="form-control" rows="2"
+                                  placeholder="Optional notes about this adjustment or transfer"></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary" id="btnSubmit">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            // Toggle destination fields based on transaction type (Transfer = 2)
+            $('#transactionType').change(function () {
+                var type = $(this).val();
+                if (type === "2") {
+                    $('#destinationSection').slideDown();
+                    $('#destinationWarehouseEntityId').prop('required', true);
+                } else {
+                    $('#destinationSection').slideUp();
+                    $('#destinationWarehouseEntityId').prop('required', false).val('');
+                    $('#destinationBinId').html('<option value="">-- Select Bin --</option>').prop('disabled', true);
+                }
+            });
+
+            // AJAX call to load bins for a selected warehouse
+            function loadBins(warehouseSelectId, binSelectId) {
+                var warehouseId = $(warehouseSelectId).val();
+                var $binSelect = $(binSelectId);
+
+                // Reset bin select list
+                $binSelect.html('<option value="">-- Select Bin --</option>');
+
+                if (!warehouseId) {
+                    $binSelect.prop('disabled', true);
+                    return;
+                }
+
+                $.ajax({
+                    url: '/Inventory/GetBinsForWarehouse',
+                    type: 'GET',
+                    data: { warehouseId: warehouseId },
+                    success: function (data) {
+                        if (data && data.length > 0) {
+                            $.each(data, function (index, bin) {
+                                $binSelect.append($('<option>', {
+                                    value: bin.id,
+                                    text: bin.code
+                                }));
+                            });
+                            $binSelect.prop('disabled', false);
+                        } else {
+                            $binSelect.html('<option value="">-- No Bins Configured --</option>');
+                            $binSelect.prop('disabled', true);
+                        }
+                    },
+                    error: function () {
+                        $binSelect.html('<option value="">-- Error Loading Bins --</option>');
+                        $binSelect.prop('disabled', true);
+                    }
+                });
+            }
+
+            // Bind change events
+            $('#warehouseEntityId').change(function () {
+                loadBins('#warehouseEntityId', '#binId');
+            });
+
+            $('#destinationWarehouseEntityId').change(function () {
+                loadBins('#destinationWarehouseEntityId', '#destinationBinId');
+            });
+
+            // Prevent submitting source and destination as identical
+            $('#adjustForm').submit(function (e) {
+                var type = $('#transactionType').val();
+                if (type === "2") {
+                    var srcWh = $('#warehouseEntityId').val();
+                    var destWh = $('#destinationWarehouseEntityId').val();
+                    var srcBin = $('#binId').val();
+                    var destBin = $('#destinationBinId').val();
+
+                    if (srcWh === destWh && srcBin === destBin) {
+                        alert("Error: Source and destination locations (Warehouse & Bin) cannot be identical.");
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+                return true;
+            });
+        });
+    </script>
+}

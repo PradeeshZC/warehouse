@@ -1,0 +1,60 @@
+@model Warehouse.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Viewer Dashboard";
+}
+
+<h1 class="h2 mb-4">Dashboard</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Products</h6>
+                <h2 class="card-title text-primary">@Model.TotalProducts</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Categories</h6>
+                <h2 class="card-title text-success">@Model.TotalCategories</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Warehouses</h6>
+                <h2 class="card-title text-info">@Model.TotalWarehouses</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Total Orders</h6>
+                <h2 class="card-title text-warning">@Model.TotalOrders</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><strong>Recent Orders</strong></div>
+    <div class="card-body p-0">
+        @if (Model.RecentOrders.Any())
+        {
+            <table class="table table-sm mb-0">
+                <thead><tr><th>Order #</th><th>Status</th><th class="text-end">Amount</th><th>Date</th></tr></thead>
+                <tbody>
+                    @foreach (var o in Model.RecentOrders)
+                    {
+                        <tr><td>@o.OrderNumber</td><td><span class="badge bg-secondary">@o.Status</span></td><td class="text-end">@o.TotalAmount.ToString("C")</td><td>@o.CreatedAt.ToString("MMM dd")</td></tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else { <p class="text-muted p-3 mb-0">No orders yet.</p> }
+    </div>
+</div>

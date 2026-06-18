@@ -1,0 +1,52 @@
+@model Warehouse.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Worker Dashboard";
+}
+
+<h1 class="h2 mb-4">Worker Dashboard</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Inventory Items</h6>
+                <h2 class="card-title text-info">@Model.TotalInventoryStocks</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Low Stock Alerts</h6>
+                <h2 class="card-title text-danger">@Model.LowStockCount</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Active Shipments</h6>
+                <h2 class="card-title text-warning">@Model.ActiveShipmentsCount</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><strong>Recent Inventory Transactions</strong></div>
+    <div class="card-body p-0">
+        @if (Model.RecentTransactions.Any())
+        {
+            <table class="table table-sm mb-0">
+                <thead><tr><th>Date</th><th>Product</th><th>Warehouse</th><th>Type</th><th class="text-end">Qty</th></tr></thead>
+                <tbody>
+                    @foreach (var tx in Model.RecentTransactions)
+                    {
+                        <tr><td>@tx.CreatedAt.ToString("MMM dd HH:mm")</td><td>@tx.ProductName</td><td>@tx.WarehouseName</td><td><span class="badge bg-info">@tx.TransactionType</span></td><td class="text-end">@tx.Quantity</td></tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else { <p class="text-muted p-3 mb-0">No transactions yet.</p> }
+    </div>
+</div>

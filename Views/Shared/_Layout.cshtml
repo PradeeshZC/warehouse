@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Warehouse</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/warehouse.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="container-fluid flex-grow-1">
+        <div class="row min-vh-100 flex-nowrap">
+            @if (User.Identity?.IsAuthenticated ?? false)
+            {
+                <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
+                    <div class="d-flex flex-column justify-content-between h-100 py-3 text-light">
+                        <div>
+                            <!-- Brand / Logo -->
+                            <div class="px-3 pb-3 mb-3 border-bottom border-secondary">
+                                <a class="text-decoration-none text-light fs-4 fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                                    Warehouse
+                                </a>
+                            </div>
+
+                            <!-- Nav Links -->
+                            <ul class="nav flex-column px-2">
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Dashboard" asp-action="Index">
+                                        Dashboard
+                                    </a>
+                                </li>
+                                <li class="nav-item mt-2">
+                                    <small class="text-secondary text-uppercase fw-bold px-3">Catalog</small>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Products" asp-action="Index">
+                                        Products
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Categories" asp-action="Index">
+                                        Categories
+                                    </a>
+                                </li>
+                                <li class="nav-item mt-2">
+                                    <small class="text-secondary text-uppercase fw-bold px-3">Inventory</small>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Warehouses" asp-action="Index">
+                                        Warehouses
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Inventory" asp-action="Index">
+                                        Stock Levels
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Inventory" asp-action="Transactions">
+                                        Transactions
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Inventory" asp-action="Adjust">
+                                        Adjust Stock
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- About Section (Bottom Left) -->
+                        <div class="px-3 pt-3 mt-4 border-top border-secondary text-secondary">
+                            <h6 class="text-light mb-1" style="font-size: 0.9rem;">About System</h6>
+                            <p class="mb-2 text-muted" style="font-size: 0.8rem; line-height: 1.2;">
+                                Enterprise Supply Chain & Warehouse Management System.
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
+                                <span>&copy; 2026 Warehouse</span>
+                                <a href="#" class="text-light text-decoration-underline" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy</a>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            }
+
+            <!-- Main Content Container -->
+            <main class="@(User.Identity?.IsAuthenticated ?? false ? "col-md-9 ms-sm-auto col-lg-10" : "col-12") px-md-4 py-3 d-flex flex-column">
+                <!-- Top Header Bar with Profile info -->
+                <div class="d-flex justify-content-end align-items-center pb-2 mb-3 border-bottom">
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        <div class="dropdown">
+                            <a class="btn btn-outline-dark btn-sm dropdown-toggle" href="#" role="button" id="userMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                @User.Identity.Name
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="userMenuLink">
+                                <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index">Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form asp-controller="Auth" asp-action="Logout" method="post" class="px-2 m-0">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-link dropdown-item text-danger text-start w-100 py-1 m-0 border-0 bg-transparent">Logout</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="btn btn-outline-primary btn-sm" asp-controller="Auth" asp-action="Login">Login</a>
+                    }
+                </div>
+
+                <!-- Page Header (Title + Breadcrumbs) -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+                    <h1 class="h2 mb-0">@ViewData["Title"]</h1>
+                    <nav aria-label="breadcrumb">
+                        @RenderSection("Breadcrumb", required: false)
+                    </nav>
+                </div>
+
+                <!-- Page Content -->
+                <div class="flex-grow-1">
+                    @RenderBody()
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content text-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="privacyModalLabel">Privacy Policy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 class="fw-bold">Warehouse Data Protection & Usage</h6>
+                    <p class="small text-muted">
+                        This system collects and processes inventory logs, audit trails, and user role metrics solely for operational tracking and security auditing within this organization.
+                    </p>
+                    <p class="small text-muted">
+                        All transaction logs automatically register the user identifier to maintain compliance and traceability. Session authentication cookies and refresh tokens are stored securely to protect authentication integrity.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

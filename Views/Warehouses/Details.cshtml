@@ -1,0 +1,187 @@
+@model Warehouse.Models.Entities.WarehouseEntity
+
+@{
+    ViewData["Title"] = $"Warehouse: {Model.Name}";
+    var bins = ViewBag.Bins as List<Warehouse.Models.DTOs.BinDto> ?? new List<Warehouse.Models.DTOs.BinDto>();
+    var stocks = ViewBag.Stocks as List<Warehouse.Models.DTOs.InventoryStockDto> ?? new List<Warehouse.Models.DTOs.InventoryStockDto>();
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="mb-4">
+    <a asp-action="Index" class="btn btn-secondary btn-sm">&larr; Back to List</a>
+</div>
+
+<div class="row">
+    <!-- Warehouse Details Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 bg-dark text-light">
+            <div class="card-body">
+                <h5 class="card-title text-primary">Warehouse Info</h5>
+                <hr class="border-secondary" />
+                <p class="card-text">
+                    <strong>Name:</strong><br />
+                    <span class="fs-5">@Model.Name</span>
+                </p>
+                <p class="card-text">
+                    <strong>Location:</strong><br />
+                    <span>@(Model.Location ?? "—")</span>
+                </p>
+                <p class="card-text">
+                    <strong>Total Bins:</strong> @bins.Count
+                </p>
+                <p class="card-text">
+                    <strong>Total Quantity:</strong> @stocks.Sum(s => s.Quantity).ToString("F2")
+                </p>
+                <div class="d-grid mt-3">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">Edit Warehouse</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Bin Form Card -->
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body">
+                <h5 class="card-title text-primary">Add Storage Bin</h5>
+                <hr />
+                <form asp-action="AddBin" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="warehouseId" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label for="code" class="form-label">Bin Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-sm" id="code" name="code" placeholder="e.g. BIN-A01" required maxlength="100" />
+                        <small class="text-muted">Must be unique within this warehouse.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control form-control-sm" id="description" name="description" placeholder="e.g. Shelf A, Row 1" rows="2" maxlength="250"></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-sm">Add Bin</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bins & Inventory Tabs -->
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <ul class="nav nav-tabs card-header-tabs" id="warehouseTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="bins-tab" data-bs-toggle="tab" data-bs-target="#bins" type="button" role="tab" aria-controls="bins" aria-selected="true">
+                            Storage Bins (@bins.Count)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button" role="tab" aria-controls="stocks" aria-selected="false">
+                            Current Stock (@stocks.Count)
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="warehouseTabsContent">
+                    <!-- Bins Tab -->
+                    <div class="tab-pane fade show active" id="bins" role="tabpanel" aria-labelledby="bins-tab">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Bin Code</th>
+                                        <th>Description</th>
+                                        <th>Distinct Products</th>
+                                        <th>Total Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (bins.Any())
+                                    {
+                                        foreach (var bin in bins)
+                                        {
+                                            <tr>
+                                                <td><span class="badge bg-secondary fs-6">@bin.Code</span></td>
+                                                <td>@(bin.Description ?? "—")</td>
+                                                <td>@bin.StockCount</td>
+                                                <td>@bin.TotalQuantity.ToString("F2")</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">No bins created yet. Use the form on the left to add your first bin.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Stocks Tab -->
+                    <div class="tab-pane fade" id="stocks" role="tabpanel" aria-labelledby="stocks-tab">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Product SKU</th>
+                                        <th>Product Name</th>
+                                        <th>Bin Location</th>
+                                        <th class="text-end">Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (stocks.Any())
+                                    {
+                                        foreach (var item in stocks)
+                                        {
+                                            <tr>
+                                                <td><code>@item.ProductSKU</code></td>
+                                                <td>@item.ProductName</td>
+                                                <td>
+                                                    @if (item.BinCode != "N/A" && !string.IsNullOrEmpty(item.BinCode))
+                                                    {
+                                                        <span class="badge bg-secondary">@item.BinCode</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">Unassigned</span>
+                                                    }
+                                                </td>
+                                                <td class="text-end fw-bold">@item.Quantity.ToString("F2")</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">No stock found in this warehouse. Adjust stock under the Inventory menu to add stock.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

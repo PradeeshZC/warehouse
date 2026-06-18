@@ -1,0 +1,13 @@
+@{ var bc = ViewData["Breadcrumb"] as IEnumerable<KeyValuePair<string,string>>; }
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        @if (bc != null)
+        {
+            foreach (var item in bc)
+            {
+                <li class="breadcrumb-item"><a href="@item.Value">@item.Key</a></li>
+            }
+        }
+    </ol>
+</nav>

@@ -1,0 +1,76 @@
+@model Warehouse.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Manager Dashboard";
+}
+
+<h1 class="h2 mb-4">Manager Dashboard</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Total Orders</h6>
+                <h2 class="card-title text-primary">@Model.TotalOrders</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Pending Orders</h6>
+                <h2 class="card-title text-warning">@Model.PendingOrdersCount</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Low Stock Alerts</h6>
+                <h2 class="card-title text-danger">@Model.LowStockCount</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>Recent Orders</strong></div>
+            <div class="card-body p-0">
+                @if (Model.RecentOrders.Any())
+                {
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Order #</th><th>Status</th><th class="text-end">Amount</th></tr></thead>
+                        <tbody>
+                            @foreach (var o in Model.RecentOrders)
+                            {
+                                <tr><td>@o.OrderNumber</td><td><span class="badge bg-secondary">@o.Status</span></td><td class="text-end">@o.TotalAmount.ToString("C")</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else { <p class="text-muted p-3 mb-0">No orders yet.</p> }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>Low Stock Products</strong></div>
+            <div class="card-body p-0">
+                @if (Model.LowStockProducts.Any())
+                {
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Product</th><th>Warehouse</th><th class="text-end">Qty</th></tr></thead>
+                        <tbody>
+                            @foreach (var i in Model.LowStockProducts)
+                            {
+                                <tr class="table-warning"><td>@i.ProductName</td><td>@i.WarehouseName</td><td class="text-end fw-bold">@i.Quantity</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else { <p class="text-muted p-3 mb-0">All stock levels are healthy.</p> }
+            </div>
+        </div>
+    </div>
+</div>
