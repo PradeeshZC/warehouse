@@ -1,52 +1,110 @@
 @model Warehouse.Models.ViewModels.DashboardViewModel
 @{
-    ViewData["Title"] = "Worker Dashboard";
+    ViewData["Title"] = "Dashboard";
+    ViewData["ShowSearch"] = true;
 }
 
-<h1 class="h2 mb-4">Worker Dashboard</h1>
+<div class="mb-4 pb-2 border-bottom">
+    <h1 class="page-title mb-1">Dashboard</h1>
+    <p class="text-muted mb-0">Monitor inventory, orders and warehouse activity</p>
+</div>
 
+<!-- Group 1: Inventory & Operation Metrics -->
+<h5 class="section-title mb-3" style="font-size: 16px !important; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Operational Metrics</h5>
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="card border-info h-100">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-muted">Inventory Items</h6>
-                <h2 class="card-title text-info">@Model.TotalInventoryStocks</h2>
+        <div class="kpi-card">
+            <div>
+                <div class="kpi-label">Stock Records</div>
+                <div class="kpi-value">@Model.TotalInventoryStocks</div>
+            </div>
+            <div class="kpi-trend neutral">
+                <i data-lucide="clipboard-list" style="width: 14px; height: 14px;"></i> Total unique locations
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card border-danger h-100">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-muted">Low Stock Alerts</h6>
-                <h2 class="card-title text-danger">@Model.LowStockCount</h2>
+        <div class="kpi-card">
+            <div>
+                <div class="kpi-label">Active Shipments</div>
+                <div class="kpi-value">@Model.ActiveShipmentsCount</div>
+            </div>
+            <div class="kpi-trend neutral">
+                <i data-lucide="truck" style="width: 14px; height: 14px;"></i> In transit
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card border-warning h-100">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-muted">Active Shipments</h6>
-                <h2 class="card-title text-warning">@Model.ActiveShipmentsCount</h2>
+        <div class="kpi-card">
+            <div>
+                <div class="kpi-label">Low Stock Alerts</div>
+                <div class="kpi-value" style="color: @(Model.LowStockCount > 0 ? "#DC2626" : "inherit")">@Model.LowStockCount</div>
+            </div>
+            <div class="kpi-trend @(Model.LowStockCount > 0 ? "down" : "up")">
+                <i data-lucide="alert-triangle" style="width: 14px; height: 14px;"></i> Below threshold
             </div>
         </div>
     </div>
 </div>
 
+<!-- Recent Transactions -->
 <div class="card">
-    <div class="card-header"><strong>Recent Inventory Transactions</strong></div>
+    <div class="card-header">
+        <span>Recent Inventory Transactions</span>
+    </div>
     <div class="card-body p-0">
         @if (Model.RecentTransactions.Any())
         {
-            <table class="table table-sm mb-0">
-                <thead><tr><th>Date</th><th>Product</th><th>Warehouse</th><th>Type</th><th class="text-end">Qty</th></tr></thead>
-                <tbody>
-                    @foreach (var tx in Model.RecentTransactions)
-                    {
-                        <tr><td>@tx.CreatedAt.ToString("MMM dd HH:mm")</td><td>@tx.ProductName</td><td>@tx.WarehouseName</td><td><span class="badge bg-info">@tx.TransactionType</span></td><td class="text-end">@tx.Quantity</td></tr>
-                    }
-                </tbody>
-            </table>
+            <div class="table-responsive" style="border: none; border-radius: 0;">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Product</th>
+                            <th>Warehouse</th>
+                            <th>Type</th>
+                            <th class="text-end">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tx in Model.RecentTransactions)
+                        {
+                            <tr>
+                                <td>@tx.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td><strong>@tx.ProductName</strong></td>
+                                <td>@tx.WarehouseName</td>
+                                <td>
+                                    @{
+                                        var txClass = "tx-adjust";
+                                        var txName = tx.TransactionType.ToString();
+                                        if (txName == "StockIn" || txName == "PurchaseReceive") txClass = "tx-in";
+                                        else if (txName == "StockOut" || txName == "OrderDispatch") txClass = "tx-out";
+                                        else if (txName == "Transfer") txClass = "tx-transfer";
+                                    }
+                                    <span class="tx-badge @txClass">@tx.TransactionType</span>
+                                </td>
+                                <td class="text-end fw-bold">@tx.Quantity.ToString("F2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
-        else { <p class="text-muted p-3 mb-0">No transactions yet.</p> }
+        else
+        {
+            <div class="empty-state">
+                <i data-lucide="history" class="empty-state-icon"></i>
+                <div class="empty-state-title">No transactions yet</div>
+                <p class="empty-state-desc">Recent stock adjustment logs will be displayed here.</p>
+            </div>
+        }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            lucide.createIcons();
+        });
+    </script>
+}

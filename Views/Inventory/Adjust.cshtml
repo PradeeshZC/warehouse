@@ -2,37 +2,48 @@
     ViewData["Title"] = "Adjust Inventory";
 }
 
-<div class="mb-3">
-    <a asp-action="Index" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Back to Inventory
-    </a>
+<div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+        <h1 class="page-title mb-1">Adjust Inventory</h1>
+        <p class="text-muted mb-0">Record a stock adjustment, increase, decrease, or transfer inventory between locations</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Back to Inventory
+        </a>
+    </div>
 </div>
 
 @if (!ViewData.ModelState.IsValid)
 {
-    <div class="alert alert-danger shadow-sm" role="alert">
-        <h6 class="alert-heading fw-bold">Please correct the following errors:</h6>
-        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-        {
-            <div>@error.ErrorMessage</div>
-        }
+    <div class="alert alert-danger" role="alert">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i data-lucide="alert-circle" style="width: 16px; height: 16px; color: #DC2626;"></i>
+            <h6 class="alert-heading fw-semibold mb-0">Please correct the following errors:</h6>
+        </div>
+        <ul class="mb-0 ps-3">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
     </div>
 }
 
 <div class="row">
-    <div class="col-lg-7">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">Stock Adjustment / Transfer</h5>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <span class="fw-semibold">Stock Adjustment / Transfer Details</span>
             </div>
             <div class="card-body">
                 <form asp-action="Adjust" method="post" id="adjustForm">
                     @Html.AntiForgeryToken()
 
-                    <div class="row">
+                    <div class="row g-3">
                         <!-- Product Selection -->
-                        <div class="col-md-12 mb-3">
-                            <label for="productId" class="form-label fw-bold">Product <span class="text-danger">*</span></label>
+                        <div class="col-12">
+                            <label for="productId" class="form-label">Product<span class="required-star">*</span></label>
                             <select name="productId" id="productId" class="form-select" required>
                                 <option value="">-- Select Product --</option>
                                 @if (ViewBag.Products != null)
@@ -46,8 +57,8 @@
                         </div>
 
                         <!-- Transaction Type -->
-                        <div class="col-md-6 mb-3">
-                            <label for="transactionType" class="form-label fw-bold">Transaction Type <span class="text-danger">*</span></label>
+                        <div class="col-md-6">
+                            <label for="transactionType" class="form-label">Transaction Type<span class="required-star">*</span></label>
                             <select name="transactionType" id="transactionType" class="form-select" required>
                                 <option value="">-- Select Type --</option>
                                 @if (ViewBag.TransactionTypes != null)
@@ -61,21 +72,18 @@
                         </div>
 
                         <!-- Quantity -->
-                        <div class="col-md-6 mb-3">
-                            <label for="quantity" class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
+                        <div class="col-md-6">
+                            <label for="quantity" class="form-label">Quantity<span class="required-star">*</span></label>
                             <input type="number" name="quantity" id="quantity" class="form-control"
                                    step="0.01" min="0.01" required placeholder="Enter quantity" />
                         </div>
                     </div>
 
-                    <hr />
-
-                    <!-- Source Location Section -->
-                    <h5 class="text-primary mb-3">Source Location</h5>
-                    <div class="row">
+                    <h5 class="section-title mt-4 mb-3" style="font-size: 15px !important; color: #475569;">Source Location</h5>
+                    <div class="row g-3">
                         <!-- Warehouse -->
-                        <div class="col-md-6 mb-3">
-                            <label for="warehouseEntityId" class="form-label fw-bold">Warehouse <span class="text-danger">*</span></label>
+                        <div class="col-md-6">
+                            <label for="warehouseEntityId" class="form-label">Warehouse<span class="required-star">*</span></label>
                             <select name="warehouseEntityId" id="warehouseEntityId" class="form-select" required>
                                 <option value="">-- Select Warehouse --</option>
                                 @if (ViewBag.Warehouses != null)
@@ -89,8 +97,8 @@
                         </div>
 
                         <!-- Bin Location -->
-                        <div class="col-md-6 mb-3">
-                            <label for="binId" class="form-label fw-bold">Storage Bin</label>
+                        <div class="col-md-6">
+                            <label for="binId" class="form-label">Storage Bin</label>
                             <select name="binId" id="binId" class="form-select" disabled>
                                 <option value="">-- Select Bin --</option>
                             </select>
@@ -99,12 +107,11 @@
 
                     <!-- Destination Location Section (For Transfers Only) -->
                     <div id="destinationSection" style="display: none;">
-                        <hr class="border-primary" />
-                        <h5 class="text-success mb-3">Destination Location</h5>
-                        <div class="row">
+                        <h5 class="section-title mt-4 mb-3" style="font-size: 15px !important; color: #16A34A;">Destination Location</h5>
+                        <div class="row g-3">
                             <!-- Destination Warehouse -->
-                            <div class="col-md-6 mb-3">
-                                <label for="destinationWarehouseEntityId" class="form-label fw-bold">Destination Warehouse <span class="text-danger">*</span></label>
+                            <div class="col-md-6">
+                                <label for="destinationWarehouseEntityId" class="form-label">Destination Warehouse<span class="required-star">*</span></label>
                                 <select name="destinationWarehouseEntityId" id="destinationWarehouseEntityId" class="form-select">
                                     <option value="">-- Select Warehouse --</option>
                                     @if (ViewBag.Warehouses != null)
@@ -118,8 +125,8 @@
                             </div>
 
                             <!-- Destination Bin -->
-                            <div class="col-md-6 mb-3">
-                                <label for="destinationBinId" class="form-label fw-bold">Destination Storage Bin</label>
+                            <div class="col-md-6">
+                                <label for="destinationBinId" class="form-label">Destination Storage Bin</label>
                                 <select name="destinationBinId" id="destinationBinId" class="form-select" disabled>
                                     <option value="">-- Select Bin --</option>
                                 </select>
@@ -127,18 +134,18 @@
                         </div>
                     </div>
 
-                    <hr />
-
                     <!-- Notes -->
-                    <div class="mb-3">
-                        <label for="notes" class="form-label fw-bold">Notes</label>
-                        <textarea name="notes" id="notes" class="form-control" rows="2"
-                                  placeholder="Optional notes about this adjustment or transfer"></textarea>
+                    <div class="mb-4 mt-4">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea name="notes" id="notes" class="form-control" rows="3"
+                                  placeholder="Optional notes describing this adjustment or transfer"></textarea>
                     </div>
 
-                    <div class="d-flex gap-2 justify-content-end">
+                    <div class="d-flex gap-2 justify-content-end border-top pt-3">
                         <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary" id="btnSubmit">Submit</button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmit">
+                            <i data-lucide="check" style="width: 16px; height: 16px;"></i> Submit Adjustment
+                        </button>
                     </div>
                 </form>
             </div>
@@ -150,6 +157,8 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         $(document).ready(function () {
+            lucide.createIcons();
+
             // Toggle destination fields based on transaction type (Transfer = 2)
             $('#transactionType').change(function () {
                 var type = $(this).val();
@@ -206,6 +215,7 @@
                 loadBins('#warehouseEntityId', '#binId');
             });
 
+            // AJAX call for destination warehouse bins
             $('#destinationWarehouseEntityId').change(function () {
                 loadBins('#destinationWarehouseEntityId', '#destinationBinId');
             });

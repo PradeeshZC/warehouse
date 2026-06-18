@@ -1,76 +1,179 @@
 @model Warehouse.Models.ViewModels.DashboardViewModel
 @{
-    ViewData["Title"] = "Manager Dashboard";
+    ViewData["Title"] = "Dashboard";
+    ViewData["ShowSearch"] = true;
 }
 
-<h1 class="h2 mb-4">Manager Dashboard</h1>
+<div class="mb-4 pb-2 border-bottom">
+    <h1 class="page-title mb-1">Dashboard</h1>
+    <p class="text-muted mb-0">Monitor inventory, orders and warehouse activity</p>
+</div>
 
+<!-- Group 1: Inventory Metrics -->
+<h5 class="section-title mb-3" style="font-size: 16px !important; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Inventory Metrics</h5>
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card border-primary h-100">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-muted">Total Orders</h6>
-                <h2 class="card-title text-primary">@Model.TotalOrders</h2>
+    <div class="col-md-6">
+        <div class="kpi-card">
+            <div>
+                <div class="kpi-label">Active Warehouses</div>
+                <div class="kpi-value">@Model.TotalWarehouses</div>
+            </div>
+            <div class="kpi-trend neutral">
+                <i data-lucide="building" style="width: 14px; height: 14px;"></i> Total storage facilities
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card border-warning h-100">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-muted">Pending Orders</h6>
-                <h2 class="card-title text-warning">@Model.PendingOrdersCount</h2>
+    <div class="col-md-6">
+        <div class="kpi-card">
+            <div>
+                <div class="kpi-label">Total Inventory Value</div>
+                <div class="kpi-value">@Model.TotalInventoryValue.ToString("C")</div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-danger h-100">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-muted">Low Stock Alerts</h6>
-                <h2 class="card-title text-danger">@Model.LowStockCount</h2>
+            <div class="kpi-trend up">
+                <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> Current stock valuation
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-3">
+<!-- Group 2: Operational Metrics -->
+<h5 class="section-title mb-3" style="font-size: 16px !important; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Operational Metrics</h5>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="kpi-card">
+            <div>
+                <div class="kpi-label">Total Orders</div>
+                <div class="kpi-value">@Model.TotalOrders</div>
+            </div>
+            <div class="kpi-trend neutral">
+                <i data-lucide="shopping-cart" style="width: 14px; height: 14px;"></i> Sales order registry
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi-card">
+            <div>
+                <div class="kpi-label">Pending Orders</div>
+                <div class="kpi-value">@Model.PendingOrdersCount</div>
+            </div>
+            <div class="kpi-trend @(Model.PendingOrdersCount > 0 ? "down" : "neutral")">
+                <i data-lucide="clock" style="width: 14px; height: 14px;"></i> Awaiting processing
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi-card">
+            <div>
+                <div class="kpi-label">Low Stock Alerts</div>
+                <div class="kpi-value" style="color: @(Model.LowStockCount > 0 ? "#DC2626" : "inherit")">@Model.LowStockCount</div>
+            </div>
+            <div class="kpi-trend @(Model.LowStockCount > 0 ? "down" : "up")">
+                <i data-lucide="alert-triangle" style="width: 14px; height: 14px;"></i> Items below threshold
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Orders -->
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header"><strong>Recent Orders</strong></div>
+            <div class="card-header">
+                <span>Recent Orders</span>
+            </div>
             <div class="card-body p-0">
                 @if (Model.RecentOrders.Any())
                 {
-                    <table class="table table-sm mb-0">
-                        <thead><tr><th>Order #</th><th>Status</th><th class="text-end">Amount</th></tr></thead>
-                        <tbody>
-                            @foreach (var o in Model.RecentOrders)
-                            {
-                                <tr><td>@o.OrderNumber</td><td><span class="badge bg-secondary">@o.Status</span></td><td class="text-end">@o.TotalAmount.ToString("C")</td></tr>
-                            }
-                        </tbody>
-                    </table>
+                    <div class="table-responsive" style="border: none; border-radius: 0;">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var o in Model.RecentOrders)
+                                {
+                                    <tr>
+                                        <td><strong>@o.OrderNumber</strong></td>
+                                        <td>
+                                            @{
+                                                var badgeClass = "badge-pending";
+                                                if (o.Status.ToLower() == "delivered") badgeClass = "badge-delivered";
+                                                else if (o.Status.ToLower() == "shipped" || o.Status.ToLower() == "intransit") badgeClass = "badge-shipped";
+                                                else if (o.Status.ToLower() == "cancelled") badgeClass = "badge-cancelled";
+                                            }
+                                            <span class="badge @badgeClass">@o.Status</span>
+                                        </td>
+                                        <td class="text-end fw-bold">@o.TotalAmount.ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 }
-                else { <p class="text-muted p-3 mb-0">No orders yet.</p> }
+                else
+                {
+                    <div class="empty-state">
+                        <i data-lucide="shopping-bag" class="empty-state-icon"></i>
+                        <div class="empty-state-title">No orders found</div>
+                        <p class="empty-state-desc">There are currently no sales orders logged.</p>
+                    </div>
+                }
             </div>
         </div>
     </div>
+
+    <!-- Low Stock Products -->
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header"><strong>Low Stock Products</strong></div>
+            <div class="card-header">
+                <span>Low Stock Products</span>
+            </div>
             <div class="card-body p-0">
                 @if (Model.LowStockProducts.Any())
                 {
-                    <table class="table table-sm mb-0">
-                        <thead><tr><th>Product</th><th>Warehouse</th><th class="text-end">Qty</th></tr></thead>
-                        <tbody>
-                            @foreach (var i in Model.LowStockProducts)
-                            {
-                                <tr class="table-warning"><td>@i.ProductName</td><td>@i.WarehouseName</td><td class="text-end fw-bold">@i.Quantity</td></tr>
-                            }
-                        </tbody>
-                    </table>
+                    <div class="table-responsive" style="border: none; border-radius: 0;">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Warehouse</th>
+                                    <th class="text-end">Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var i in Model.LowStockProducts)
+                                {
+                                    <tr>
+                                        <td>@i.ProductName</td>
+                                        <td>@i.WarehouseName</td>
+                                        <td class="text-end fw-bold" style="color: @(i.Quantity < 5 ? "#DC2626" : "#F59E0B")">@i.Quantity.ToString("F0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 }
-                else { <p class="text-muted p-3 mb-0">All stock levels are healthy.</p> }
+                else
+                {
+                    <div class="empty-state">
+                        <i data-lucide="check-circle-2" class="empty-state-icon" style="color: #16A34A;"></i>
+                        <div class="empty-state-title">No low-stock products</div>
+                        <p class="empty-state-desc">All inventory levels are currently within healthy thresholds.</p>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            lucide.createIcons();
+        });
+    </script>
+}

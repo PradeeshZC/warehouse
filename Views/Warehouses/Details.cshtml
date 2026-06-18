@@ -6,10 +6,25 @@
     var stocks = ViewBag.Stocks as List<Warehouse.Models.DTOs.InventoryStockDto> ?? new List<Warehouse.Models.DTOs.InventoryStockDto>();
 }
 
+<div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+        <h1 class="page-title mb-1">Warehouse Details</h1>
+        <p class="text-muted mb-0">Overview of warehouse info, bins layout, and stock logs</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Back to List
+        </a>
+    </div>
+</div>
+
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
+        <div class="d-flex align-items-center gap-2">
+            <i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: #16A34A;"></i>
+            <span>@TempData["Success"]</span>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
@@ -17,171 +32,203 @@
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["Error"]
+        <div class="d-flex align-items-center gap-2">
+            <i data-lucide="alert-circle" style="width: 16px; height: 16px; color: #DC2626;"></i>
+            <span>@TempData["Error"]</span>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 
-<div class="mb-4">
-    <a asp-action="Index" class="btn btn-secondary btn-sm">&larr; Back to List</a>
-</div>
-
-<div class="row">
-    <!-- Warehouse Details Card -->
-    <div class="col-md-4 mb-4">
-        <div class="card shadow-sm border-0 bg-dark text-light">
-            <div class="card-body">
-                <h5 class="card-title text-primary">Warehouse Info</h5>
-                <hr class="border-secondary" />
-                <p class="card-text">
-                    <strong>Name:</strong><br />
-                    <span class="fs-5">@Model.Name</span>
-                </p>
-                <p class="card-text">
-                    <strong>Location:</strong><br />
-                    <span>@(Model.Location ?? "—")</span>
-                </p>
-                <p class="card-text">
-                    <strong>Total Bins:</strong> @bins.Count
-                </p>
-                <p class="card-text">
-                    <strong>Total Quantity:</strong> @stocks.Sum(s => s.Quantity).ToString("F2")
-                </p>
-                <div class="d-grid mt-3">
-                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">Edit Warehouse</a>
+<div class="row g-4">
+    <!-- Left Column: Warehouse info and add bin form -->
+    <div class="col-lg-4">
+        <!-- Warehouse Info Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <span class="fw-semibold">Warehouse Info</span>
+            </div>
+            <div class="card-body p-0">
+                <table class="table mb-0" style="border-collapse: separate; border-spacing: 0;">
+                    <tbody>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="width: 40%; background-color: #F8FAFC;">Name</td>
+                            <td><strong>@Model.Name</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="background-color: #F8FAFC;">Location</td>
+                            <td>@(Model.Location ?? "—")</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="background-color: #F8FAFC;">Total Bins</td>
+                            <td>@bins.Count</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="background-color: #F8FAFC;">Total Stock</td>
+                            <td class="fw-bold text-primary">@stocks.Sum(s => s.Quantity).ToString("N0")</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-body border-top">
+                <div class="d-grid">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-secondary">
+                        <i data-lucide="edit" style="width: 16px; height: 16px;"></i> Edit Warehouse
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- Add Bin Form Card -->
-        <div class="card shadow-sm border-0 mt-4">
+        <div class="card">
+            <div class="card-header">
+                <span class="fw-semibold">Add Storage Bin</span>
+            </div>
             <div class="card-body">
-                <h5 class="card-title text-primary">Add Storage Bin</h5>
-                <hr />
                 <form asp-action="AddBin" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="warehouseId" value="@Model.Id" />
 
                     <div class="mb-3">
-                        <label for="code" class="form-label">Bin Code <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control form-control-sm" id="code" name="code" placeholder="e.g. BIN-A01" required maxlength="100" />
-                        <small class="text-muted">Must be unique within this warehouse.</small>
+                        <label for="code" class="form-label">Bin Code<span class="required-star">*</span></label>
+                        <input type="text" class="form-control" id="code" name="code" placeholder="e.g. BIN-A01" required maxlength="100" />
+                        <span class="form-text">Must be unique within this warehouse.</span>
                     </div>
 
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control form-control-sm" id="description" name="description" placeholder="e.g. Shelf A, Row 1" rows="2" maxlength="250"></textarea>
+                        <textarea class="form-control" id="description" name="description" placeholder="e.g. Shelf A, Row 1" rows="2" maxlength="250"></textarea>
                     </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-sm">Add Bin</button>
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Bin
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Bins & Inventory Tabs -->
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white">
-                <ul class="nav nav-tabs card-header-tabs" id="warehouseTabs" role="tablist">
+    <!-- Right Column: Bins & Inventory Tabs -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-white pb-0" style="border-bottom: 1px solid #E2E8F0;">
+                <ul class="nav nav-tabs card-header-tabs border-bottom-0" id="warehouseTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="bins-tab" data-bs-toggle="tab" data-bs-target="#bins" type="button" role="tab" aria-controls="bins" aria-selected="true">
+                        <button class="nav-link active fw-medium" id="bins-tab" data-bs-toggle="tab" data-bs-target="#bins" type="button" role="tab" aria-controls="bins" aria-selected="true" style="border-bottom: 2px solid transparent; padding: 12px 16px;">
                             Storage Bins (@bins.Count)
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button" role="tab" aria-controls="stocks" aria-selected="false">
+                        <button class="nav-link fw-medium" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button" role="tab" aria-controls="stocks" aria-selected="false" style="border-bottom: 2px solid transparent; padding: 12px 16px;">
                             Current Stock (@stocks.Count)
                         </button>
                     </li>
                 </ul>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="tab-content" id="warehouseTabsContent">
                     <!-- Bins Tab -->
                     <div class="tab-pane fade show active" id="bins" role="tabpanel" aria-labelledby="bins-tab">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Bin Code</th>
-                                        <th>Description</th>
-                                        <th>Distinct Products</th>
-                                        <th>Total Quantity</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @if (bins.Any())
-                                    {
-                                        foreach (var bin in bins)
+                        @if (bins.Any())
+                        {
+                            <div class="table-responsive" style="border: none; border-radius: 0;">
+                                <table class="table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Bin Code</th>
+                                            <th>Description</th>
+                                            <th>Distinct Products</th>
+                                            <th class="text-end">Total Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var bin in bins)
                                         {
                                             <tr>
-                                                <td><span class="badge bg-secondary fs-6">@bin.Code</span></td>
+                                                <td>
+                                                    <span class="badge text-secondary" style="background-color: #F1F5F9; color: #475569 !important; border: 1px solid #E2E8F0;">
+                                                        @bin.Code
+                                                    </span>
+                                                </td>
                                                 <td>@(bin.Description ?? "—")</td>
-                                                <td>@bin.StockCount</td>
-                                                <td>@bin.TotalQuantity.ToString("F2")</td>
+                                                <td>@bin.StockCount products</td>
+                                                <td class="text-end fw-bold">@bin.TotalQuantity.ToString("N0")</td>
                                             </tr>
                                         }
-                                    }
-                                    else
-                                    {
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted py-4">No bins created yet. Use the form on the left to add your first bin.</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-state py-5">
+                                <i data-lucide="layout-grid" class="empty-state-icon"></i>
+                                <div class="empty-state-title">No storage bins created yet</div>
+                                <p class="empty-state-desc">Use the form on the left to add storage bins to this warehouse.</p>
+                            </div>
+                        }
                     </div>
 
                     <!-- Stocks Tab -->
                     <div class="tab-pane fade" id="stocks" role="tabpanel" aria-labelledby="stocks-tab">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Product SKU</th>
-                                        <th>Product Name</th>
-                                        <th>Bin Location</th>
-                                        <th class="text-end">Quantity</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @if (stocks.Any())
-                                    {
-                                        foreach (var item in stocks)
+                        @if (stocks.Any())
+                        {
+                            <div class="table-responsive" style="border: none; border-radius: 0;">
+                                <table class="table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Product SKU</th>
+                                            <th>Product Name</th>
+                                            <th>Bin Location</th>
+                                            <th class="text-end">Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in stocks)
                                         {
                                             <tr>
                                                 <td><code>@item.ProductSKU</code></td>
-                                                <td>@item.ProductName</td>
+                                                <td><strong>@item.ProductName</strong></td>
                                                 <td>
                                                     @if (item.BinCode != "N/A" && !string.IsNullOrEmpty(item.BinCode))
                                                     {
-                                                        <span class="badge bg-secondary">@item.BinCode</span>
+                                                        <span class="badge text-secondary" style="background-color: #F1F5F9; color: #475569 !important; border: 1px solid #E2E8F0;">
+                                                            @item.BinCode
+                                                        </span>
                                                     }
                                                     else
                                                     {
                                                         <span class="text-muted">Unassigned</span>
                                                     }
                                                 </td>
-                                                <td class="text-end fw-bold">@item.Quantity.ToString("F2")</td>
+                                                <td class="text-end fw-bold">@item.Quantity.ToString("N0")</td>
                                             </tr>
                                         }
-                                    }
-                                    else
-                                    {
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted py-4">No stock found in this warehouse. Adjust stock under the Inventory menu to add stock.</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-state py-5">
+                                <i data-lucide="package-open" class="empty-state-icon"></i>
+                                <div class="empty-state-title">No stock found</div>
+                                <p class="empty-state-desc">There are currently no items stored in this warehouse. Go to the Adjust Stock screen to record stock entries.</p>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            lucide.createIcons();
+        });
+    </script>
+}

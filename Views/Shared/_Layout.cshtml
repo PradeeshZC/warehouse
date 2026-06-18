@@ -3,79 +3,157 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Warehouse</title>
+    <title>@ViewData["Title"] - Warehouse WMS</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/warehouse.styles.css" asp-append-version="true" />
+    <!-- Load Lucide Icon Library -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+    <!-- PJAX Loading Progress Bar -->
+    <div id="pjax-loading-bar" style="position: fixed; top: 0; left: 0; height: 3px; background-color: #2563EB; z-index: 9999; width: 0%; display: none; transition: width 0.3s ease;"></div>
+
     <div class="container-fluid flex-grow-1">
-        <div class="row min-vh-100 flex-nowrap">
+        <div class="row min-vh-100 flex-nowrap m-0">
             @if (User.Identity?.IsAuthenticated ?? false)
             {
-                <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
-                    <div class="d-flex flex-column justify-content-between h-100 py-3 text-light">
-                        <div>
-                            <!-- Brand / Logo -->
-                            <div class="px-3 pb-3 mb-3 border-bottom border-secondary">
-                                <a class="text-decoration-none text-light fs-4 fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                                    Warehouse
-                                </a>
-                            </div>
+                <!-- Sidebar Navigation -->
+                <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar">
+                    <div class="sidebar-brand">
+                        <a class="sidebar-brand-link d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                            <i data-lucide="warehouse" class="text-primary" style="width: 20px; height: 20px;"></i>
+                            <span>Warehouse</span>
+                        </a>
+                    </div>
 
-                            <!-- Nav Links -->
-                            <ul class="nav flex-column px-2">
+                    <div class="d-flex flex-column justify-content-between flex-grow-1">
+                        <div>
+                            <!-- Overview -->
+                            <p class="sidebar-section-title">Overview</p>
+                            <ul class="nav flex-column">
                                 <li class="nav-item">
-                                    <a class="nav-link text-light" asp-controller="Dashboard" asp-action="Index">
-                                        Dashboard
+                                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">
+                                        <i data-lucide="layout-dashboard"></i>
+                                        <span>Dashboard</span>
                                     </a>
                                 </li>
-                                <li class="nav-item mt-2">
-                                    <small class="text-secondary text-uppercase fw-bold px-3">Catalog</small>
-                                </li>
+                            </ul>
+
+                            <!-- Catalog -->
+                            <p class="sidebar-section-title">Catalog</p>
+                            <ul class="nav flex-column">
                                 <li class="nav-item">
-                                    <a class="nav-link text-light" asp-controller="Products" asp-action="Index">
-                                        Products
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-light" asp-controller="Categories" asp-action="Index">
-                                        Categories
-                                    </a>
-                                </li>
-                                <li class="nav-item mt-2">
-                                    <small class="text-secondary text-uppercase fw-bold px-3">Inventory</small>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-light" asp-controller="Warehouses" asp-action="Index">
-                                        Warehouses
+                                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Products" ? "active" : "")" asp-controller="Products" asp-action="Index">
+                                        <i data-lucide="package"></i>
+                                        <span>Products</span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-light" asp-controller="Inventory" asp-action="Index">
-                                        Stock Levels
+                                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Categories" ? "active" : "")" asp-controller="Categories" asp-action="Index">
+                                        <i data-lucide="tag"></i>
+                                        <span>Categories</span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-light" asp-controller="Inventory" asp-action="Transactions">
-                                        Transactions
+                                    <a class="nav-link" href="#">
+                                        <i data-lucide="users"></i>
+                                        <span>Suppliers</span>
+                                        <span class="badge badge-warning ms-auto py-0 px-1" style="font-size: 9px;">Draft</span>
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <!-- Inventory -->
+                            <p class="sidebar-section-title">Inventory</p>
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Warehouses" ? "active" : "")" asp-controller="Warehouses" asp-action="Index">
+                                        <i data-lucide="building"></i>
+                                        <span>Warehouses</span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-light" asp-controller="Inventory" asp-action="Adjust">
-                                        Adjust Stock
+                                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Inventory" asp-action="Index">
+                                        <i data-lucide="clipboard-list"></i>
+                                        <span>Stock Levels</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory" && ViewContext.RouteData.Values["action"]?.ToString() == "Adjust" ? "active" : "")" asp-controller="Inventory" asp-action="Adjust">
+                                        <i data-lucide="sliders"></i>
+                                        <span>Stock Adjustments</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory" && ViewContext.RouteData.Values["action"]?.ToString() == "Transactions" ? "active" : "")" asp-controller="Inventory" asp-action="Transactions">
+                                        <i data-lucide="history"></i>
+                                        <span>Transactions</span>
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <!-- Orders -->
+                            <p class="sidebar-section-title">Orders</p>
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#">
+                                        <i data-lucide="file-text"></i>
+                                        <span>Purchase Orders</span>
+                                        <span class="badge badge-warning ms-auto py-0 px-1" style="font-size: 9px;">Draft</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#">
+                                        <i data-lucide="shopping-cart"></i>
+                                        <span>Sales Orders</span>
+                                        <span class="badge badge-warning ms-auto py-0 px-1" style="font-size: 9px;">Draft</span>
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <!-- Reports -->
+                            <p class="sidebar-section-title">Reports</p>
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#">
+                                        <i data-lucide="bar-chart-3"></i>
+                                        <span>Inventory Reports</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#">
+                                        <i data-lucide="trending-up"></i>
+                                        <span>Financial Reports</span>
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <!-- Administration -->
+                            <p class="sidebar-section-title">Administration</p>
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#">
+                                        <i data-lucide="shield-check"></i>
+                                        <span>Users & Roles</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#">
+                                        <i data-lucide="settings"></i>
+                                        <span>Settings</span>
                                     </a>
                                 </li>
                             </ul>
                         </div>
 
-                        <!-- About Section (Bottom Left) -->
-                        <div class="px-3 pt-3 mt-4 border-top border-secondary text-secondary">
-                            <h6 class="text-light mb-1" style="font-size: 0.9rem;">About System</h6>
-                            <p class="mb-2 text-muted" style="font-size: 0.8rem; line-height: 1.2;">
-                                Enterprise Supply Chain & Warehouse Management System.
+                        <!-- Sidebar About Section -->
+                        <div class="sidebar-about border-top border-secondary mt-4">
+                            <h6 class="text-light mb-1" style="font-size: 12px; font-weight:600;">WMS System</h6>
+                            <p class="text-muted mb-2" style="font-size: 11px; line-height: 1.3;">
+                                Professional Supply Chain & Warehouse Management.
                             </p>
-                            <div class="d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
+                            <div class="d-flex justify-content-between align-items-center" style="font-size: 11px;">
                                 <span>&copy; 2026 Warehouse</span>
                                 <a href="#" class="text-light text-decoration-underline" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy</a>
                             </div>
@@ -85,46 +163,75 @@
             }
 
             <!-- Main Content Container -->
-            <main class="@(User.Identity?.IsAuthenticated ?? false ? "col-md-9 ms-sm-auto col-lg-10" : "col-12") px-md-4 py-3 d-flex flex-column">
-                <!-- Top Header Bar with Profile info -->
-                <div class="d-flex justify-content-end align-items-center pb-2 mb-3 border-bottom">
-                    @if (User.Identity?.IsAuthenticated ?? false)
-                    {
-                        <div class="dropdown">
-                            <a class="btn btn-outline-dark btn-sm dropdown-toggle" href="#" role="button" id="userMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                                @User.Identity.Name
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="userMenuLink">
-                                <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index">Profile</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form asp-controller="Auth" asp-action="Logout" method="post" class="px-2 m-0">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-link dropdown-item text-danger text-start w-100 py-1 m-0 border-0 bg-transparent">Logout</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-                    }
-                    else
-                    {
-                        <a class="btn btn-outline-primary btn-sm" asp-controller="Auth" asp-action="Login">Login</a>
-                    }
-                </div>
+            <div class="col px-0 d-flex flex-column min-vh-100">
+                <!-- Top Header Bar -->
+                <header class="top-header">
+                    <!-- Global Search Command Palette Style -->
+                    <!-- Global Search Command Palette Style -->
+                    <div id="header-search-wrapper" class="search-container position-relative">
+                        <i data-lucide="search" class="position-absolute text-muted" style="left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; pointer-events: none;"></i>
+                        <input type="text" class="form-control search-input" placeholder="Search products, orders, bins..." />
+                    </div>
 
-                <!-- Page Header (Title + Breadcrumbs) -->
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-                    <h1 class="h2 mb-0">@ViewData["Title"]</h1>
-                    <nav aria-label="breadcrumb">
-                        @RenderSection("Breadcrumb", required: false)
-                    </nav>
-                </div>
+                    <!-- Right actions: Help, Notifications, Profile -->
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="#" class="text-muted p-1 hover-btn" title="Help Documentation">
+                            <i data-lucide="help-circle" style="width: 20px; height: 20px;"></i>
+                        </a>
+                        <a href="#" class="text-muted p-1 hover-btn position-relative" title="Notifications">
+                            <i data-lucide="bell" style="width: 20px; height: 20px;"></i>
+                            <span class="position-absolute top-1 start-75 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                        </a>
 
-                <!-- Page Content -->
-                <div class="flex-grow-1">
-                    @RenderBody()
+                        <div class="border-start border-secondary py-2 mx-1"></div>
+
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <div class="dropdown">
+                                <a class="btn btn-outline-dark btn-sm dropdown-toggle border-0 d-flex align-items-center gap-2" href="#" role="button" id="userMenuLink" data-bs-toggle="dropdown" aria-expanded="false" style="height: auto; padding: 4px 8px;">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 11px; font-weight: 600;">
+                                        @User.Identity.Name?.Substring(0, Math.Min(2, User.Identity.Name.Length)).ToUpper()
+                                    </div>
+                                    <span style="font-size: 13px; font-weight: 500;">@User.Identity.Name</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="userMenuLink">
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Dashboard" asp-action="Index">
+                                            <i data-lucide="user" style="width: 14px; height: 14px;"></i>
+                                            <span>Profile Settings</span>
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Auth" asp-action="Logout" method="post" class="px-2 m-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-link dropdown-item text-danger text-start w-100 py-1 m-0 border-0 bg-transparent d-flex align-items-center gap-2">
+                                                <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
+                                                <span>Logout</span>
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <a class="btn btn-primary btn-sm" asp-controller="Auth" asp-action="Login">Login</a>
+                        }
+                    </div>
+                </header>
+
+                <!-- PJAX Container Wrapper -->
+                <div id="pjax-container" class="flex-grow-1 d-flex flex-column" style="overflow: hidden; height: 100%;">
+                    <!-- Main Content Body -->
+                    <main class="px-4 py-4" data-show-search="@(ViewData["ShowSearch"]?.ToString()?.ToLower() ?? "false")">
+                        @RenderBody()
+                    </main>
+                    <div id="pjax-scripts" style="display: none;">
+                        @await RenderSectionAsync("Scripts", required: false)
+                    </div>
                 </div>
-            </main>
+            </div>
         </div>
     </div>
 
@@ -155,6 +262,113 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        // Initialize Lucide Icons
+        $(document).ready(function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+
+        // PJAX Navigation Logic for Seamless SPA Page Switching
+        $(document).ready(function() {
+            // Intercept internal nav links
+            $(document).on('click', '#sidebar a.nav-link, a[data-pjax]', function(e) {
+                var url = $(this).attr('href');
+                if (!url || url === '#' || url.startsWith('javascript:')) return;
+                
+                // Skip external links
+                if (url.startsWith('http') && !url.includes(window.location.host)) return;
+                
+                e.preventDefault();
+                loadPjaxPage(url);
+            });
+
+            // Handle browser popstate (back/forward navigation)
+            window.onpopstate = function(e) {
+                if (e.state && e.state.url) {
+                    loadPjaxPage(e.state.url, false);
+                } else {
+                    loadPjaxPage(window.location.pathname + window.location.search, false);
+                }
+            };
+
+            function loadPjaxPage(url, pushState = true) {
+                $('#pjax-loading-bar').css('width', '35%').show();
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    dataType: 'html',
+                    success: function(response) {
+                        $('#pjax-loading-bar').css('width', '100%');
+                        
+                        var parser = new DOMParser();
+                        var doc = parser.parseFromString(response, 'text/html');
+
+                        var newPjaxContent = $(doc).find('#pjax-container').html();
+                        var newTitle = $(doc).find('title').text();
+
+                        // Swap main container
+                        $('#pjax-container').html(newPjaxContent);
+                        if (newTitle) {
+                            document.title = newTitle;
+                        }
+
+                        // Update URL
+                        if (pushState) {
+                            history.pushState({ url: url }, '', url);
+                        }
+
+                        // Update active navigation class
+                        updateSidebarActiveLink(url);
+
+                        // Check search visibility
+                        updateSearchVisibility();
+
+                        // Reinitialize Lucide Icons on the loaded content
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+
+                        setTimeout(function() {
+                            $('#pjax-loading-bar').hide().css('width', '0%');
+                        }, 200);
+                    },
+                    error: function(xhr, status, error) {
+                        // Fallback to normal navigation if AJAX fails
+                        window.location.href = url;
+                    }
+                });
+            }
+
+            function updateSidebarActiveLink(url) {
+                var path = url.split('?')[0].split('#')[0];
+                $('#sidebar a.nav-link').removeClass('active');
+                
+                $('#sidebar a.nav-link').each(function() {
+                    var href = $(this).attr('href');
+                    if (href) {
+                        var hrefPath = href.split('?')[0].split('#')[0];
+                        if (path === hrefPath) {
+                            $(this).addClass('active');
+                        }
+                    }
+                });
+            }
+
+            function updateSearchVisibility() {
+                var showSearch = $('main').attr('data-show-search') === 'true';
+                if (showSearch) {
+                    $('#header-search-wrapper').css('visibility', 'visible').css('opacity', '1').show();
+                } else {
+                    $('#header-search-wrapper').css('visibility', 'hidden').css('opacity', '0').hide();
+                }
+            }
+
+            // Set initial search bar visibility
+            updateSearchVisibility();
+        });
+    </script>
 </body>
 </html>

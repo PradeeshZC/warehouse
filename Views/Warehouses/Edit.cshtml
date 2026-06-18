@@ -4,35 +4,60 @@
     ViewData["Title"] = "Edit Warehouse";
 }
 
-<h4>Edit Warehouse</h4>
-<hr />
+<div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+        <h1 class="page-title mb-1">Edit Warehouse</h1>
+        <p class="text-muted mb-0">Modify warehouse properties and address location registry</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Back to Warehouses
+        </a>
+    </div>
+</div>
 
 <div class="row">
-    <div class="col-md-6">
-        <form asp-action="Edit" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="Id" />
-
-            <div class="mb-3">
-                <label asp-for="Name" class="form-label">Name <span class="text-danger">*</span></label>
-                <input asp-for="Name" class="form-control" required maxlength="200" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <span class="fw-semibold">Warehouse Details</span>
             </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
 
-            <div class="mb-3">
-                <label asp-for="Location" class="form-label">Location</label>
-                <input asp-for="Location" class="form-control" maxlength="500" />
-                <span asp-validation-for="Location" class="text-danger"></span>
-            </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Name" class="form-label">Warehouse Name<span class="required-star">*</span></label>
+                            <input asp-for="Name" class="form-control" required maxlength="200" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        <div class="col-md-6">
+                            <label asp-for="Location" class="form-label">Location Address</label>
+                            <input asp-for="Location" class="form-control" maxlength="500" />
+                            <span asp-validation-for="Location" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end border-top pt-3 mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="check" style="width: 16px; height: 16px;"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            lucide.createIcons();
+        });
+    </script>
 }
