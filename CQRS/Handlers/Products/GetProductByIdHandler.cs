@@ -2,8 +2,8 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Warehouse.CQRS.Queries.Products;
-using Warehouse.Models.DTOs;
 using Warehouse.Data;
+using Warehouse.Models.DTOs;
 
 namespace Warehouse.CQRS.Handlers.Products
 {
@@ -20,16 +20,16 @@ namespace Warehouse.CQRS.Handlers.Products
         {
             var product = await _context.Products
                 .AsNoTracking()
-                .Include(p => p.Category)
-                .Where(p => p.Id == request.Id)
+                .Where(p => p.Id == request.Id && !p.IsDeleted)
                 .Select(p => new ProductDto
                 {
-                    Id = p.Id,
-                    Name = p.Name,
-                    SKU = p.SKU,
-                    Description = p.Description,
-                    UnitPrice = p.UnitPrice,
-                    CategoryId = p.CategoryId,
+                    Id           = p.Id,
+                    Name         = p.Name,
+                    SKU          = p.SKU,
+                    Barcode      = p.Barcode,
+                    Description  = p.Description,
+                    UnitPrice    = p.UnitPrice,
+                    CategoryId   = p.CategoryId,
                     CategoryName = p.Category.Name
                 })
                 .FirstOrDefaultAsync(cancellationToken);

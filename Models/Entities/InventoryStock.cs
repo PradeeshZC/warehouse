@@ -21,6 +21,18 @@ namespace Warehouse.Models.Entities
         [Column(TypeName = "decimal(18,4)")]
         public decimal Quantity { get; set; }
 
+        /// <summary>
+        /// Quantity currently reserved for pending orders / active reservations.
+        /// Cannot be reduced below this value during stock adjustment.
+        /// Updated by Reservation / ReleaseReservation transaction handlers.
+        /// </summary>
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal ReservedQuantity { get; set; } = 0;
+
+        /// <summary>Available stock = Quantity - ReservedQuantity</summary>
+        [NotMapped]
+        public decimal AvailableQuantity => Quantity - ReservedQuantity;
+
         // Navigation
         public Product Product { get; set; } = null!;
         public WarehouseEntity WarehouseEntity { get; set; } = null!;

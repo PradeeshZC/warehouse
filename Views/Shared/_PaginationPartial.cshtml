@@ -1,0 +1,95 @@
+@* Reusable pagination partial. Usage:
+   @await Html.PartialAsync("_PaginationPartial", new PaginationInfo { ... })
+   OR via ViewBag: CurrentPage, TotalPages, (optional) action route values *@
+@{
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages  = ViewBag.TotalPages ?? 1;
+    string? search  = ViewBag.Search as string;
+    int? categoryId = ViewBag.CategoryId as int?;
+    int? warehouseId = ViewBag.WarehouseId as int?;
+    int? binId      = ViewBag.BinId as int?;
+    int? typeFilter = ViewBag.TypeFilter as int?;
+    int totalCount  = ViewBag.TotalCount ?? 0;
+
+    int windowSize  = 5;
+    int startPage   = Math.Max(1, currentPage - windowSize / 2);
+    int endPage     = Math.Min(totalPages, startPage + windowSize - 1);
+    if (endPage - startPage < windowSize - 1) startPage = Math.Max(1, endPage - windowSize + 1);
+}
+
+@if (totalPages > 1)
+{
+    <nav aria-label="Page navigation" class="d-flex justify-content-between align-items-center mt-3 px-1">
+        <span class="text-muted" style="font-size:13px;">
+            Showing page @currentPage of @totalPages (@totalCount.ToString("N0") records)
+        </span>
+        <ul class="pagination mb-0" style="gap: 4px;">
+            @* Previous *@
+            <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                <a class="page-link" style="border-radius:6px; border:1px solid #D0D5DD; color:#344054; padding:6px 14px; font-size:13px;"
+                   asp-route-page="@(currentPage - 1)"
+                   asp-route-search="@search"
+                   asp-route-categoryId="@categoryId"
+                   asp-route-warehouseId="@warehouseId"
+                   asp-route-binId="@binId"
+                   asp-route-typeFilter="@typeFilter">
+                    <i data-lucide="chevron-left" style="width:14px;height:14px;"></i>
+                </a>
+            </li>
+
+            @if (startPage > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" style="border-radius:6px; border:1px solid #D0D5DD; padding:6px 12px; font-size:13px;"
+                       asp-route-page="1" asp-route-search="@search">1</a>
+                </li>
+                if (startPage > 2)
+                {
+                    <li class="page-item disabled"><span class="page-link" style="border:none; color:#94A3B8;">…</span></li>
+                }
+            }
+
+            @for (int i = startPage; i <= endPage; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link"
+                       style="border-radius:6px; border:1px solid @(i == currentPage ? "#2563EB" : "#D0D5DD"); 
+                              color:@(i == currentPage ? "#FFF" : "#344054"); 
+                              background-color:@(i == currentPage ? "#2563EB" : "#FFF"); 
+                              padding:6px 12px; font-size:13px; font-weight:500;"
+                       asp-route-page="@i"
+                       asp-route-search="@search"
+                       asp-route-categoryId="@categoryId"
+                       asp-route-warehouseId="@warehouseId"
+                       asp-route-binId="@binId"
+                       asp-route-typeFilter="@typeFilter">@i</a>
+                </li>
+            }
+
+            @if (endPage < totalPages)
+            {
+                if (endPage < totalPages - 1)
+                {
+                    <li class="page-item disabled"><span class="page-link" style="border:none; color:#94A3B8;">…</span></li>
+                }
+                <li class="page-item">
+                    <a class="page-link" style="border-radius:6px; border:1px solid #D0D5DD; padding:6px 12px; font-size:13px;"
+                       asp-route-page="@totalPages" asp-route-search="@search">@totalPages</a>
+                </li>
+            }
+
+            @* Next *@
+            <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                <a class="page-link" style="border-radius:6px; border:1px solid #D0D5DD; color:#344054; padding:6px 14px; font-size:13px;"
+                   asp-route-page="@(currentPage + 1)"
+                   asp-route-search="@search"
+                   asp-route-categoryId="@categoryId"
+                   asp-route-warehouseId="@warehouseId"
+                   asp-route-binId="@binId"
+                   asp-route-typeFilter="@typeFilter">
+                    <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+}

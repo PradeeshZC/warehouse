@@ -40,6 +40,20 @@
                         </div>
 
                         <div class="col-md-6">
+                            <label for="Barcode" class="form-label">
+                                Barcode <span class="text-muted" style="font-size:11px;">(optional, unique)</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white text-muted">
+                                    <i data-lucide="scan-line" style="width:14px;height:14px;"></i>
+                                </span>
+                                <input type="text" class="form-control" id="Barcode" name="Barcode"
+                                       value="@Model.Barcode" maxlength="100" placeholder="EAN-13, UPC, QR..." />
+                            </div>
+                            <span class="text-danger" data-valmsg-for="Barcode"></span>
+                        </div>
+
+                        <div class="col-md-6">
                             <label for="CategoryId" class="form-label">Category<span class="required-star">*</span></label>
                             <select class="form-select" id="CategoryId" name="CategoryId" required asp-items="@(ViewBag.Categories as SelectList)">
                                 <option value="">— Select Category —</option>

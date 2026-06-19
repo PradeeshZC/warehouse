@@ -18,10 +18,16 @@ namespace Warehouse.Data.Configurations
             builder.Property(it => it.PreviousQuantity).HasColumnType("decimal(18,4)").IsRequired();
             builder.Property(it => it.NewQuantity).HasColumnType("decimal(18,4)").IsRequired();
 
-            builder.HasIndex(it => it.ProductId);
-            builder.HasIndex(it => it.WarehouseEntityId);
-            builder.HasIndex(it => it.CreatedAt);
-            builder.HasIndex(it => it.TransactionType);
+            builder.Property(it => it.Reason).HasMaxLength(500);
+            builder.Property(it => it.Notes).HasMaxLength(1000);
+            builder.Property(it => it.ReferenceNumber).HasMaxLength(100);
+            builder.Property(it => it.CreatedByUserId).HasMaxLength(450);
+
+            // Performance indexes
+            builder.HasIndex(it => it.ProductId).HasDatabaseName("IX_InventoryTransactions_ProductId");
+            builder.HasIndex(it => it.WarehouseEntityId).HasDatabaseName("IX_InventoryTransactions_WarehouseEntityId");
+            builder.HasIndex(it => it.CreatedAt).HasDatabaseName("IX_InventoryTransactions_CreatedAt");
+            builder.HasIndex(it => it.TransactionType).HasDatabaseName("IX_InventoryTransactions_TransactionType");
 
             builder.HasOne(it => it.Product)
                 .WithMany()

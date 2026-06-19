@@ -36,6 +36,13 @@ namespace Warehouse.Models.Entities
         [StringLength(100)]
         public string? ReferenceNumber { get; set; }
 
+        /// <summary>
+        /// Structured reason for stock adjustments (e.g. "Damaged Goods", "Inventory Count", "Supplier Error").
+        /// Required for Adjustment transactions.
+        /// </summary>
+        [StringLength(500)]
+        public string? Reason { get; set; }
+
         [StringLength(1000)]
         public string? Notes { get; set; }
 

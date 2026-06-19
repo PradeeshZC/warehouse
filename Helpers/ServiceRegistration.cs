@@ -1,7 +1,6 @@
 #nullable enable
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Warehouse.Data;
 using Warehouse.Repositories.Implementations;
 using Warehouse.Repositories.Interfaces;
 using Warehouse.Services.Interfaces;
@@ -27,6 +26,9 @@ namespace Warehouse.Helpers
             // Auth & JWT services
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IAuthService, AuthService>();
+
+            // Caching — IMemoryCache must be registered in Program.cs via AddMemoryCache()
+            services.AddScoped<ICacheService, MemoryCacheService>();
         }
     }
 }

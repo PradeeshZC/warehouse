@@ -1,0 +1,310 @@
+@model Warehouse.Models.ViewModels.AdjustStockViewModel
+@using Warehouse.Models.Enums
+@{
+    ViewData["Title"] = "Adjust Stock — " + Model.ProductName;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div>
+        <h1 class="page-title mb-1">Adjust Stock</h1>
+        <p class="text-muted mb-0">Review current inventory and apply a stock adjustment with a required reason</p>
+    </div>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back to Inventory
+    </a>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:none"></div>
+
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState.Values.Any(v => v.Errors.Count > 0))
+{
+    <div class="alert alert-danger mb-4">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i data-lucide="alert-circle" style="width:16px;height:16px;color:#DC2626;"></i>
+            <strong>Please correct the following:</strong>
+        </div>
+        <ul class="mb-0 ps-3">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<div class="row g-4">
+    <!-- ── Product / Stock Details Panel ── -->
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i data-lucide="package" style="width:16px;height:16px;color:#2563EB;"></i>
+                <span class="fw-semibold">Current Stock Details</span>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0" style="border-collapse:separate;border-spacing:0;">
+                    <tbody>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="width:40%;background:#F8FAFC;">Product Name</td>
+                            <td><strong>@Model.ProductName</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">SKU</td>
+                            <td><span class="badge" style="background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;font-size:12px;">@Model.ProductSKU</span></td>
+                        </tr>
+                        @if (!string.IsNullOrEmpty(Model.ProductBarcode))
+                        {
+                            <tr>
+                                <td class="fw-semibold text-muted" style="background:#F8FAFC;">Barcode</td>
+                                <td><code data-barcode="@Model.ProductBarcode">@Model.ProductBarcode</code></td>
+                            </tr>
+                        }
+                        <tr>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">Category</td>
+                            <td>@(Model.CategoryName ?? "—")</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">Warehouse</td>
+                            <td>
+                                <strong>@Model.WarehouseName</strong>
+                                @if (!string.IsNullOrEmpty(Model.WarehouseLocation))
+                                {
+                                    <br /><small class="text-muted">@Model.WarehouseLocation</small>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">Bin Location</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(Model.BinCode))
+                                {
+                                    <span class="badge" style="background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;">@Model.BinCode</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Unassigned</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">Current Qty</td>
+                            <td class="fw-bold" style="font-size:16px;">@Model.CurrentQuantity.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">Reserved Qty</td>
+                            <td class="text-warning fw-medium">@Model.ReservedQuantity.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">Available Qty</td>
+                            <td>
+                                @{
+                                    var availQty = Model.AvailableQuantity;
+                                    var availClass = availQty <= 0 ? "text-danger fw-bold" : availQty < 10 ? "text-warning fw-bold" : "text-success fw-bold";
+                                }
+                                <span class="@availClass" style="font-size:15px;">@availQty.ToString("N2")</span>
+                                @if (availQty <= 0)
+                                {
+                                    <span class="badge bg-danger ms-2" style="font-size:10px;">OUT OF STOCK</span>
+                                }
+                                else if (availQty < 10)
+                                {
+                                    <span class="badge bg-warning text-dark ms-2" style="font-size:10px;">LOW STOCK</span>
+                                }
+                            </td>
+                        </tr>
+                        @if (Model.LastStockMovement.HasValue)
+                        {
+                            <tr>
+                                <td class="fw-semibold text-muted" style="background:#F8FAFC;">Last Movement</td>
+                                <td class="text-muted">@Model.LastStockMovement.Value.ToString("MMM dd, yyyy HH:mm")</td>
+                            </tr>
+                        }
+                        @if (Model.LastUpdated.HasValue)
+                        {
+                            <tr>
+                                <td class="fw-semibold text-muted" style="background:#F8FAFC;">Last Updated</td>
+                                <td class="text-muted">@Model.LastUpdated.Value.ToString("MMM dd, yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Adjustment Form ── -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i data-lucide="sliders" style="width:16px;height:16px;color:#2563EB;"></i>
+                <span class="fw-semibold">Stock Adjustment</span>
+            </div>
+            <div class="card-body">
+                <form asp-action="AdjustStock" method="post" id="adjustStockForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="StockId" />
+                    <input type="hidden" asp-for="ProductId" />
+                    <input type="hidden" asp-for="WarehouseEntityId" />
+                    <input type="hidden" asp-for="BinId" />
+
+                    <!-- Adjustment Type -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Adjustment Type <span class="text-danger">*</span></label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check form-check-inline" style="flex:1;">
+                                <input class="form-check-input" type="radio" name="AdjustmentType"
+                                       id="typeIncrease" value="0" checked />
+                                <label class="form-check-label d-flex align-items-center gap-1" for="typeIncrease"
+                                       style="cursor:pointer;">
+                                    <i data-lucide="trending-up" style="width:16px;height:16px;color:#16A34A;"></i>
+                                    <span class="fw-medium text-success">Increase Stock</span>
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline" style="flex:1;">
+                                <input class="form-check-input" type="radio" name="AdjustmentType"
+                                       id="typeDecrease" value="1" />
+                                <label class="form-check-label d-flex align-items-center gap-1" for="typeDecrease"
+                                       style="cursor:pointer;">
+                                    <i data-lucide="trending-down" style="width:16px;height:16px;color:#DC2626;"></i>
+                                    <span class="fw-medium text-danger">Decrease Stock</span>
+                                </label>
+                            </div>
+                        </div>
+                        <span asp-validation-for="AdjustmentType" class="text-danger"></span>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="mb-4">
+                        <label asp-for="QuantityChange" class="form-label fw-semibold">
+                            Quantity to Adjust <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input asp-for="QuantityChange" type="number" class="form-control"
+                                   step="0.01" min="0.01" id="quantityChange"
+                                   placeholder="Enter quantity" />
+                            <span class="input-group-text">units</span>
+                        </div>
+                        <div class="form-text" id="quantityHint"></div>
+                        <span asp-validation-for="QuantityChange" class="text-danger"></span>
+                    </div>
+
+                    <!-- Adjustment Reason (required) -->
+                    <div class="mb-4">
+                        <label asp-for="Reason" class="form-label fw-semibold">
+                            Adjustment Reason <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="Reason" class="form-select" id="reason" required>
+                            <option value="">— Select Reason —</option>
+                            <option value="Inventory Count">Inventory Count / Cycle Count</option>
+                            <option value="Damaged Goods">Damaged / Defective Goods</option>
+                            <option value="Supplier Error">Supplier Error / Shortage</option>
+                            <option value="Theft / Loss">Theft / Unexplained Loss</option>
+                            <option value="Returned Goods">Customer Return / Returned Goods</option>
+                            <option value="Expired Goods">Expired Goods</option>
+                            <option value="Data Correction">Data Entry Correction</option>
+                            <option value="Transfer Adjustment">Transfer Discrepancy Adjustment</option>
+                            <option value="Other">Other (specify in notes)</option>
+                        </select>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label">Notes <span class="text-muted">(optional)</span></label>
+                        <textarea asp-for="Notes" class="form-control" rows="3"
+                                  placeholder="Any additional context for this adjustment..."></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                    </div>
+
+                    <!-- Preview block (updated by JS) -->
+                    <div id="adjustPreview" class="alert alert-info d-none mb-4" style="font-size:14px;">
+                        <i data-lucide="info" style="width:14px;height:14px;"></i>
+                        <span id="previewText"></span>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end border-top pt-3">
+                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary" id="btnSubmitAdjust">
+                            <i data-lucide="check" style="width:16px;height:16px;"></i> Apply Adjustment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            lucide.createIcons();
+
+            var currentQty    = @Model.CurrentQuantity;
+            var reservedQty   = @Model.ReservedQuantity;
+            var availableQty  = currentQty - reservedQty;
+
+            function updatePreview() {
+                var qty      = parseFloat($('#quantityChange').val()) || 0;
+                var typeVal  = $('input[name="AdjustmentType"]:checked').val();
+                var isIncrease = typeVal === '0';
+
+                if (qty <= 0) {
+                    $('#adjustPreview').addClass('d-none');
+                    $('#quantityHint').text('');
+                    return;
+                }
+
+                var newQty;
+                if (isIncrease) {
+                    newQty = currentQty + qty;
+                    $('#quantityHint').removeClass('text-danger').addClass('text-success')
+                        .text('Stock will increase from ' + currentQty.toFixed(2) + ' to ' + newQty.toFixed(2));
+                } else {
+                    newQty = currentQty - qty;
+                    if (qty > availableQty) {
+                        $('#quantityHint').removeClass('text-success').addClass('text-danger')
+                            .text('⚠ Cannot exceed available quantity of ' + availableQty.toFixed(2) + ' (current: ' + currentQty.toFixed(2) + ' - reserved: ' + reservedQty.toFixed(2) + ')');
+                        $('#adjustPreview').addClass('d-none');
+                        return;
+                    }
+                    if (newQty < 0) {
+                        $('#quantityHint').addClass('text-danger')
+                            .text('⚠ Cannot create negative inventory.');
+                        return;
+                    }
+                    $('#quantityHint').removeClass('text-danger').addClass('text-muted')
+                        .text('Stock will decrease from ' + currentQty.toFixed(2) + ' to ' + newQty.toFixed(2));
+                }
+
+                $('#previewText').text(
+                    (isIncrease ? '▲ Increase' : '▼ Decrease') +
+                    ' by ' + qty.toFixed(2) + ' units. ' +
+                    'New quantity: ' + newQty.toFixed(2)
+                );
+                $('#adjustPreview').removeClass('d-none');
+            }
+
+            $('#quantityChange').on('input', updatePreview);
+            $('input[name="AdjustmentType"]').on('change', updatePreview);
+
+            // Client-side validation before submit
+            $('#adjustStockForm').on('submit', function (e) {
+                var qty = parseFloat($('#quantityChange').val()) || 0;
+                var isDecrease = $('input[name="AdjustmentType"]:checked').val() === '1';
+
+                if (isDecrease && qty > availableQty) {
+                    e.preventDefault();
+                    alert('Cannot decrease by ' + qty.toFixed(2) + '. Available quantity is ' + availableQty.toFixed(2) + '.');
+                    return false;
+                }
+
+                if ($('#reason').val() === '') {
+                    e.preventDefault();
+                    alert('Please select an adjustment reason.');
+                    $('#reason').focus();
+                    return false;
+                }
+            });
+        });
+    </script>
+}

@@ -1,84 +1,151 @@
 @model IEnumerable<Warehouse.Models.DTOs.InventoryTransactionDto>
+@using Warehouse.Models.Enums
 
 @{
     ViewData["Title"] = "Transaction History";
+    string? search  = ViewBag.Search as string;
+    int? typeFilter = ViewBag.TypeFilter as int?;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
     <div>
         <h1 class="page-title mb-1">Transaction History</h1>
-        <p class="text-muted mb-0">View all historical inventory updates, transfers, adjustments, and dispatches</p>
+        <p class="text-muted mb-0">All historical inventory movements, adjustments and transfers</p>
     </div>
-    <div>
-        <a asp-action="Index" class="btn btn-secondary">
-            <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Back to Inventory
-        </a>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back to Inventory
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" id="txFilterForm" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label for="search" class="form-label">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted">
+                        <i data-lucide="search" style="width:14px;height:14px;"></i>
+                    </span>
+                    <input type="text" id="search" name="search" class="form-control border-start-0 ps-0"
+                           placeholder="Product name, SKU or Warehouse..." value="@search" />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label for="typeFilter" class="form-label">Transaction Type</label>
+                <select id="typeFilter" name="typeFilter" class="form-select">
+                    <option value="">— All Types —</option>
+                    @foreach (var item in (ViewBag.TransactionTypes as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>()))
+                    {
+                        bool isSelected = typeFilter.HasValue && typeFilter.Value.ToString() == item.Value;
+                        if (isSelected)
+                        {
+                            <option value="@item.Value" selected>@item.Text</option>
+                        }
+                        else
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i data-lucide="filter" style="width:14px;height:14px;"></i> Apply
+                </button>
+                <a asp-action="Transactions" class="btn btn-secondary flex-fill">
+                    <i data-lucide="x" style="width:14px;height:14px;"></i> Clear
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-semibold">Transaction Logs</span>
-        <span class="text-muted" style="font-size: 13px;">Showing @Model.Count() records</span>
+        <span class="text-muted" style="font-size:13px;">@(ViewBag.TotalCount ?? 0) records</span>
     </div>
     <div class="card-body p-0">
         @if (!Model.Any())
         {
             <div class="empty-state py-5">
                 <i data-lucide="history" class="empty-state-icon"></i>
-                <div class="empty-state-title">No transactions recorded yet</div>
-                <p class="empty-state-desc">When inventory stock is added, removed, adjusted, or transferred, the logs will appear here.</p>
+                <div class="empty-state-title">No transactions found</div>
+                <p class="empty-state-desc">No inventory transactions matched your search criteria.</p>
             </div>
         }
         else
         {
-            <div class="table-responsive" style="border: none; border-radius: 0;">
+            <div class="table-responsive" style="border:none;border-radius:0;">
                 <table class="table mb-0">
                     <thead>
                         <tr>
                             <th>Date</th>
                             <th>Product</th>
-                            <th>Warehouse</th>
+                            <th>Location</th>
                             <th>Type</th>
                             <th class="text-end">Qty</th>
-                            <th class="text-end">Previous</th>
+                            <th class="text-end">Prev</th>
                             <th class="text-end">New</th>
-                            <th>Reference</th>
-                            <th>Notes</th>
+                            <th class="text-end">Diff</th>
+                            <th>Reason / Notes</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var txn in Model)
                         {
+                            var diff = txn.QuantityDifference;
                             <tr>
-                                <td>@txn.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
-                                <td><strong>@txn.ProductName</strong></td>
-                                <td>@txn.WarehouseName</td>
+                                <td style="font-size:12px;white-space:nowrap;">
+                                    @txn.CreatedAt.ToString("MMM dd, yyyy")<br/>
+                                    <span class="text-muted">@txn.CreatedAt.ToString("HH:mm")</span>
+                                </td>
+                                <td>
+                                    <div class="fw-medium">@txn.ProductName</div>
+                                    @if (!string.IsNullOrEmpty(txn.ProductSKU))
+                                    {
+                                        <code style="font-size:11px;">@txn.ProductSKU</code>
+                                    }
+                                </td>
+                                <td style="font-size:13px;">
+                                    <div>@txn.WarehouseName</div>
+                                    @if (!string.IsNullOrEmpty(txn.BinCode))
+                                    {
+                                        <span class="badge" style="background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;font-size:10px;">@txn.BinCode</span>
+                                    }
+                                </td>
                                 <td>
                                     @{
-                                        var txClass = "tx-adjust";
-                                        var txName = txn.TransactionType.ToString();
-                                        if (txName == "StockIn" || txName == "PurchaseReceive") txClass = "tx-in";
-                                        else if (txName == "StockOut" || txName == "OrderDispatch") txClass = "tx-out";
-                                        else if (txName == "Transfer") txClass = "tx-transfer";
+                                        var txName  = txn.TransactionType.ToString();
+                                        var txClass = txName is "StockIn" or "PurchaseReceive" ? "tx-in" :
+                                                      txName is "StockOut" or "OrderDispatch"  ? "tx-out" :
+                                                      txName is "Transfer"                     ? "tx-transfer" :
+                                                      "tx-adjust";
                                     }
                                     <span class="tx-badge @txClass">@txn.TransactionType</span>
                                 </td>
-                                <td class="text-end fw-bold">@txn.Quantity.ToString("N0")</td>
-                                <td class="text-end text-muted">@txn.PreviousQuantity.ToString("N0")</td>
-                                <td class="text-end fw-medium">@txn.NewQuantity.ToString("N0")</td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(txn.ReferenceNumber))
+                                <td class="text-end fw-bold">@txn.Quantity.ToString("N2")</td>
+                                <td class="text-end text-muted">@txn.PreviousQuantity.ToString("N2")</td>
+                                <td class="text-end fw-medium">@txn.NewQuantity.ToString("N2")</td>
+                                <td class="text-end">
+                                    <span class="@(diff >= 0 ? "text-success" : "text-danger")" style="font-size:12px;font-weight:600;">
+                                        @(diff >= 0 ? "+" : "")@diff.ToString("N2")
+                                    </span>
+                                </td>
+                                <td style="max-width:200px;">
+                                    @if (!string.IsNullOrEmpty(txn.Reason))
                                     {
-                                        <code>@txn.ReferenceNumber</code>
+                                        <div class="fw-medium" style="font-size:12px;">@txn.Reason</div>
                                     }
-                                    else
+                                    @if (!string.IsNullOrEmpty(txn.Notes))
+                                    {
+                                        <div class="text-muted" style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@txn.Notes">@txn.Notes</div>
+                                    }
+                                    @if (string.IsNullOrEmpty(txn.Reason) && string.IsNullOrEmpty(txn.Notes))
                                     {
                                         <span class="text-muted">—</span>
                                     }
-                                </td>
-                                <td class="text-muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@txn.Notes">
-                                    @(txn.Notes ?? "—")
                                 </td>
                             </tr>
                         }
@@ -89,10 +156,15 @@
     </div>
 </div>
 
+@await Html.PartialAsync("_PaginationPartial")
+
 @section Scripts {
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             lucide.createIcons();
+            $('#search').on('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); $('#txFilterForm').submit(); }
+            });
         });
     </script>
 }

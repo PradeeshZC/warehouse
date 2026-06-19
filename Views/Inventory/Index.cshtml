@@ -3,20 +3,21 @@
 @{
     ViewData["Title"] = "Inventory Stock Levels";
     var selectedWarehouseId = ViewBag.WarehouseId as int?;
-    var selectedBinId = ViewBag.BinId as int?;
+    var selectedBinId       = ViewBag.BinId as int?;
+    string? search          = ViewBag.Search as string;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
     <div>
         <h1 class="page-title mb-1">Inventory Stock Levels</h1>
-        <p class="text-muted mb-0">View and manage real-time inventory levels across warehouses and bins</p>
+        <p class="text-muted mb-0">Real-time inventory across all warehouses and bins</p>
     </div>
     <div class="d-flex gap-2">
         <a asp-action="Transactions" class="btn btn-secondary">
-            <i data-lucide="history" style="width: 16px; height: 16px;"></i> Transaction History
+            <i data-lucide="history" style="width:16px;height:16px;"></i> Transaction History
         </a>
-        <a asp-action="Adjust" class="btn btn-primary">
-            <i data-lucide="edit" style="width: 16px; height: 16px;"></i> Adjust Stock
+        <a asp-action="Adjust" class="btn btn-secondary">
+            <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i> Transfer / StockIn
         </a>
     </div>
 </div>
@@ -25,10 +26,20 @@
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <div class="d-flex align-items-center gap-2">
-            <i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: #16A34A;"></i>
+            <i data-lucide="check-circle-2" style="width:16px;height:16px;color:#16A34A;"></i>
             <span>@TempData["SuccessMessage"]</span>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-center gap-2">
+            <i data-lucide="alert-circle" style="width:16px;height:16px;color:#DC2626;"></i>
+            <span>@TempData["ErrorMessage"]</span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
@@ -36,28 +47,43 @@
 <div class="card mb-4">
     <div class="card-body">
         <form method="get" id="filterForm" class="row g-3 align-items-end">
-            <!-- Warehouse Filter -->
+            <!-- Search -->
             <div class="col-md-4">
-                <label for="warehouseId" class="form-label">Select Warehouse</label>
+                <label for="search" class="form-label">Search Product</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted">
+                        <i data-lucide="search" style="width:14px;height:14px;"></i>
+                    </span>
+                    <input type="text" id="search" name="search" class="form-control border-start-0 ps-0"
+                           placeholder="Name, SKU or Barcode..." value="@search" />
+                </div>
+            </div>
+
+            <!-- Warehouse Filter -->
+            <div class="col-md-3">
+                <label for="warehouseId" class="form-label">Warehouse</label>
                 <select id="warehouseId" name="warehouseId" class="form-select" asp-items="ViewBag.Warehouses">
                     <option value="">-- All Warehouses --</option>
                 </select>
             </div>
 
             <!-- Bin Filter -->
-            <div class="col-md-4">
-                <label for="binId" class="form-label">Select Bin Location</label>
-                <select id="binId" name="binId" class="form-select" asp-items="ViewBag.Bins" disabled="@(selectedWarehouseId == null || selectedWarehouseId == 0)">
+            <div class="col-md-2">
+                <label for="binId" class="form-label">Bin</label>
+                <select id="binId" name="binId" class="form-select" asp-items="ViewBag.Bins"
+                        disabled="@(selectedWarehouseId == null || selectedWarehouseId == 0)">
                     <option value="">-- All Bins --</option>
                 </select>
             </div>
 
-            <!-- Filter Buttons -->
-            <div class="col-md-4 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-50">
-                    <i data-lucide="filter" style="width: 16px; height: 16px;"></i> Filter
+            <!-- Buttons -->
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i data-lucide="filter" style="width:14px;height:14px;"></i> Apply
                 </button>
-                <a asp-action="Index" class="btn btn-secondary w-50">Clear Filters</a>
+                <a asp-action="Index" class="btn btn-secondary flex-fill">
+                    <i data-lucide="x" style="width:14px;height:14px;"></i> Clear
+                </a>
             </div>
         </form>
     </div>
@@ -66,7 +92,7 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-semibold">Stock Levels</span>
-        <span class="text-muted" style="font-size: 13px;">Showing @Model.Count() records</span>
+        <span class="text-muted" style="font-size:13px;">@(ViewBag.TotalCount ?? 0) records</span>
     </div>
     <div class="card-body p-0">
         @if (!Model.Any())
@@ -74,47 +100,85 @@
             <div class="empty-state py-5">
                 <i data-lucide="package-x" class="empty-state-icon"></i>
                 <div class="empty-state-title">No stock records found</div>
-                <p class="empty-state-desc">No inventory stock records matched the selected warehouse or bin filters.</p>
+                <p class="empty-state-desc">No inventory stock records matched the selected filters.</p>
             </div>
         }
         else
         {
-            <div class="table-responsive" style="border: none; border-radius: 0;">
+            <div class="table-responsive" style="border:none;border-radius:0;">
                 <table class="table mb-0">
                     <thead>
                         <tr>
                             <th>Product</th>
-                            <th>SKU</th>
-                            <th>Warehouse</th>
-                            <th>Bin Location</th>
-                            <th class="text-end">Quantity</th>
+                            <th>SKU / Barcode</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th class="text-center">Stock Status</th>
+                            <th class="text-end">Qty</th>
+                            <th class="text-end">Reserved</th>
+                            <th class="text-end">Available</th>
+                            <th style="width:120px; text-align:right; padding-right:16px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var stock in Model)
                         {
-                            <tr style="@(stock.Quantity < 10 ? "background-color: #FEF2F2;" : "")">
+                            var rowBg = stock.StockStatus == "OutOfStock" ? "background-color:#FEF2F2;" :
+                                        stock.StockStatus == "LowStock"   ? "background-color:#FFFBEB;" : "";
+                            <tr style="@rowBg">
                                 <td><strong>@stock.ProductName</strong></td>
-                                <td><code>@stock.ProductSKU</code></td>
-                                <td>@stock.WarehouseName</td>
                                 <td>
-                                    @if (!string.IsNullOrEmpty(stock.BinCode))
+                                    <div><code style="font-size:12px;">@stock.ProductSKU</code></div>
+                                    @if (!string.IsNullOrEmpty(stock.ProductBarcode))
                                     {
-                                        <span class="badge text-secondary" style="background-color: #F1F5F9; color: #475569 !important; border: 1px solid #E2E8F0;">@stock.BinCode</span>
+                                        <div><span class="text-muted" style="font-size:11px;" title="Barcode">
+                                            <i data-lucide="scan-line" style="width:11px;height:11px;"></i> @stock.ProductBarcode
+                                        </span></div>
+                                    }
+                                </td>
+                                <td><span class="text-muted" style="font-size:13px;">@(stock.CategoryName ?? "—")</span></td>
+                                <td>
+                                    <!-- Warehouse / Bin card -->
+                                    <div style="font-size:13px;">
+                                        <div class="fw-medium">@stock.WarehouseName</div>
+                                        @if (!string.IsNullOrEmpty(stock.WarehouseLocation))
+                                        {
+                                            <div class="text-muted" style="font-size:11px;">@stock.WarehouseLocation</div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(stock.BinCode))
+                                        {
+                                            <span class="badge mt-1" style="background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;font-size:11px;">
+                                                <i data-lucide="box" style="width:10px;height:10px;"></i> @stock.BinCode
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    @if (stock.StockStatus == "OutOfStock")
+                                    {
+                                        <span class="badge bg-danger" style="font-size:11px;">Out of Stock</span>
+                                    }
+                                    else if (stock.StockStatus == "LowStock")
+                                    {
+                                        <span class="badge bg-warning text-dark" style="font-size:11px;">Low Stock</span>
                                     }
                                     else
                                     {
-                                        <span class="text-muted">Unassigned</span>
+                                        <span class="badge bg-success" style="font-size:11px;">In Stock</span>
                                     }
                                 </td>
+                                <td class="text-end fw-bold">@stock.Quantity.ToString("N2")</td>
+                                <td class="text-end text-warning">@stock.ReservedQuantity.ToString("N2")</td>
                                 <td class="text-end">
-                                    <span class="@(stock.Quantity < 10 ? "fw-bold text-danger" : "fw-medium")">
-                                        @stock.Quantity.ToString("N0")
+                                    <span class="@(stock.AvailableQuantity <= 0 ? "text-danger fw-bold" : stock.AvailableQuantity < 10 ? "text-warning fw-bold" : "fw-medium")">
+                                        @stock.AvailableQuantity.ToString("N2")
                                     </span>
-                                    @if (stock.Quantity < 10)
-                                    {
-                                        <span class="badge badge-danger ms-2" style="font-size: 11px; padding: 2px 6px;">Low Stock</span>
-                                    }
+                                </td>
+                                <td style="text-align:right;padding-right:16px;">
+                                    <a asp-action="AdjustStock" asp-route-stockId="@stock.Id"
+                                       class="btn btn-primary btn-sm" title="Adjust Stock">
+                                        <i data-lucide="sliders" style="width:13px;height:13px;"></i> Adjust
+                                    </a>
                                 </td>
                             </tr>
                         }
@@ -125,20 +189,35 @@
     </div>
 </div>
 
+@await Html.PartialAsync("_PaginationPartial")
+
 @section Scripts {
     <script>
         $(document).ready(function () {
             lucide.createIcons();
 
-            // Auto submit when changing warehouse (clears selected bin since bins change)
+            // When warehouse changes: reload bins via AJAX, then submit form
             $('#warehouseId').change(function () {
-                $('#binId').val(''); // Reset bin selection
-                $('#filterForm').submit();
+                var wid = $(this).val();
+                var $bin = $('#binId');
+                $bin.html('<option value="">-- All Bins --</option>').prop('disabled', true);
+
+                if (!wid) { $('#filterForm').submit(); return; }
+
+                $.get('/Inventory/GetBinsForWarehouse', { warehouseId: wid }, function (data) {
+                    if (data && data.length > 0) {
+                        $.each(data, function (i, b) { $bin.append($('<option>', { value: b.id, text: b.code })); });
+                        $bin.prop('disabled', false);
+                    }
+                    $('#filterForm').submit();
+                });
             });
 
-            // Auto submit when changing bin
-            $('#binId').change(function () {
-                $('#filterForm').submit();
+            $('#binId').change(function () { $('#filterForm').submit(); });
+
+            // Enter key in search box submits form
+            $('#search').on('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); $('#filterForm').submit(); }
             });
         });
     </script>

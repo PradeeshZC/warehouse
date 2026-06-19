@@ -2,8 +2,8 @@
 using MediatR;
 using Warehouse.CQRS.Commands.Products;
 using Warehouse.Models.DTOs;
-using Warehouse.Repositories.Interfaces;
 using Warehouse.Models.Entities;
+using Warehouse.Repositories.Interfaces;
 
 namespace Warehouse.CQRS.Handlers.Products
 {
@@ -24,12 +24,13 @@ namespace Warehouse.CQRS.Handlers.Products
             if (product == null)
                 return Result.Fail<bool>("Product not found");
 
-            product.Name = request.Name;
-            product.SKU = request.SKU;
+            product.Name        = request.Name;
+            product.SKU         = request.SKU;
+            product.Barcode     = string.IsNullOrWhiteSpace(request.Barcode) ? null : request.Barcode.Trim();
             product.Description = request.Description;
-            product.UnitPrice = request.UnitPrice;
-            product.CategoryId = request.CategoryId;
-            product.UpdatedAt = DateTime.UtcNow;
+            product.UnitPrice   = request.UnitPrice;
+            product.CategoryId  = request.CategoryId;
+            product.UpdatedAt   = DateTime.UtcNow;
 
             await _repository.UpdateAsync(product);
             await _unitOfWork.CompleteAsync();

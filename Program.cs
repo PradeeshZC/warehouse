@@ -94,6 +94,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
 });
 
+// In-memory cache (for ICacheService / MemoryCacheService)
+builder.Services.AddMemoryCache();
+
 // Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

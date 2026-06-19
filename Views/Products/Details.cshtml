@@ -1,51 +1,63 @@
 @model Warehouse.Models.DTOs.ProductDto
 @{
-    ViewData["Title"] = "Product Details";
+    ViewData["Title"] = "Product Details — " + Model.Name;
+    var inventorySummary = ViewBag.InventorySummary as IEnumerable<Warehouse.Models.DTOs.InventoryStockDto>
+                           ?? new List<Warehouse.Models.DTOs.InventoryStockDto>();
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
     <div>
         <h1 class="page-title mb-1">Product Details</h1>
-        <p class="text-muted mb-0">Detailed catalog information for product sku @Model.SKU</p>
+        <p class="text-muted mb-0">Catalog information and inventory summary for <strong>@Model.SKU</strong></p>
     </div>
-    <div>
-        <a asp-action="Index" class="btn btn-secondary">
-            <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Back to List
-        </a>
-    </div>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back to List
+    </a>
 </div>
 
-<div class="row">
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
+<div class="row g-4">
+    <!-- Product Specifications -->
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i data-lucide="package" style="width:16px;height:16px;color:#2563EB;"></i>
                 <span class="fw-semibold">Product Specifications</span>
             </div>
-            <div class="card-body">
-                <table class="table table-bordered mb-0" style="border-collapse: separate; border-spacing: 0;">
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0" style="border-collapse:separate;border-spacing:0;">
                     <tbody>
                         <tr>
-                            <td class="fw-semibold text-muted" style="width: 35%; background-color: #F8FAFC;">Product Name</td>
+                            <td class="fw-semibold text-muted" style="width:35%;background:#F8FAFC;">Product Name</td>
                             <td><strong>@Model.Name</strong></td>
                         </tr>
                         <tr>
-                            <td class="fw-semibold text-muted" style="background-color: #F8FAFC;">SKU Code</td>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">SKU Code</td>
                             <td>
-                                <span class="badge text-secondary" style="background-color: #F1F5F9; color: #475569 !important; border: 1px solid #E2E8F0;">
-                                    @Model.SKU
-                                </span>
+                                <span class="badge" style="background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;font-size:13px;">@Model.SKU</span>
                             </td>
                         </tr>
+                        @if (!string.IsNullOrEmpty(Model.Barcode))
+                        {
+                            <tr>
+                                <td class="fw-semibold text-muted" style="background:#F8FAFC;">Barcode</td>
+                                <td>
+                                    <code data-barcode="@Model.Barcode" style="font-size:14px;letter-spacing:1px;">@Model.Barcode</code>
+                                    <small class="text-muted ms-2" style="font-size:11px;">
+                                        <i data-lucide="scan-line" style="width:11px;height:11px;"></i> Scannable
+                                    </small>
+                                </td>
+                            </tr>
+                        }
                         <tr>
-                            <td class="fw-semibold text-muted" style="background-color: #F8FAFC;">Category</td>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">Category</td>
                             <td>@(Model.CategoryName ?? "—")</td>
                         </tr>
                         <tr>
-                            <td class="fw-semibold text-muted" style="background-color: #F8FAFC;">Unit Price</td>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">Unit Price</td>
                             <td class="fw-bold text-primary">@Model.UnitPrice.ToString("C")</td>
                         </tr>
                         <tr>
-                            <td class="fw-semibold text-muted" style="background-color: #F8FAFC;">Description</td>
+                            <td class="fw-semibold text-muted" style="background:#F8FAFC;">Description</td>
                             <td class="text-muted">@(Model.Description ?? "No description provided.")</td>
                         </tr>
                     </tbody>
@@ -53,21 +65,126 @@
             </div>
         </div>
 
-        <div class="mt-4 d-flex gap-2">
+        <div class="mt-3 d-flex gap-2">
             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
-                <i data-lucide="edit" style="width: 16px; height: 16px;"></i> Edit Product
+                <i data-lucide="edit" style="width:16px;height:16px;"></i> Edit Product
             </a>
             <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
-                <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i> Delete Product
+                <i data-lucide="trash-2" style="width:16px;height:16px;"></i> Delete
             </a>
+        </div>
+    </div>
+
+    <!-- Inventory Summary -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i data-lucide="warehouse" style="width:16px;height:16px;color:#16A34A;"></i>
+                <span class="fw-semibold">Inventory Summary</span>
+                <span class="badge bg-secondary ms-auto" style="font-size:11px;">@inventorySummary.Count() location(s)</span>
+            </div>
+            <div class="card-body p-0">
+                @if (!inventorySummary.Any())
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i data-lucide="package-x" style="width:32px;height:32px;color:#CBD5E1;"></i>
+                        <p class="mt-2 mb-0">No inventory records for this product.</p>
+                        <a asp-controller="Inventory" asp-action="Adjust" class="btn btn-sm btn-primary mt-2">
+                            <i data-lucide="plus" style="width:14px;height:14px;"></i> Add Stock
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Warehouse</th>
+                                <th>Bin</th>
+                                <th class="text-end">Total Qty</th>
+                                <th class="text-end">Reserved</th>
+                                <th class="text-end">Available</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                decimal totalQty      = 0;
+                                decimal totalReserved = 0;
+                            }
+                            @foreach (var stock in inventorySummary)
+                            {
+                                totalQty      += stock.Quantity;
+                                totalReserved += stock.ReservedQuantity;
+                                <tr>
+                                    <td>
+                                        <div class="fw-medium" style="font-size:13px;">@stock.WarehouseName</div>
+                                        @if (!string.IsNullOrEmpty(stock.WarehouseLocation))
+                                        {
+                                            <div class="text-muted" style="font-size:11px;">@stock.WarehouseLocation</div>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(stock.BinCode))
+                                        {
+                                            <span class="badge" style="background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;font-size:11px;">
+                                                <i data-lucide="box" style="width:10px;height:10px;"></i> @stock.BinCode
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted" style="font-size:12px;">—</span>
+                                        }
+                                    </td>
+                                    <td class="text-end fw-bold">@stock.Quantity.ToString("N2")</td>
+                                    <td class="text-end text-warning">@stock.ReservedQuantity.ToString("N2")</td>
+                                    <td class="text-end">
+                                        <span class="@(stock.AvailableQuantity <= 0 ? "text-danger fw-bold" : stock.AvailableQuantity < 10 ? "text-warning fw-bold" : "fw-medium")">
+                                            @stock.AvailableQuantity.ToString("N2")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (stock.StockStatus == "OutOfStock")
+                                        {
+                                            <span class="badge bg-danger" style="font-size:10px;">Out of Stock</span>
+                                        }
+                                        else if (stock.StockStatus == "LowStock")
+                                        {
+                                            <span class="badge bg-warning text-dark" style="font-size:10px;">Low Stock</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success" style="font-size:10px;">In Stock</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-controller="Inventory" asp-action="AdjustStock" asp-route-stockId="@stock.Id"
+                                           class="btn btn-sm btn-outline-primary" title="Adjust Stock">
+                                            <i data-lucide="sliders" style="width:12px;height:12px;"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="fw-bold" style="background:#F8FAFC;">
+                                <td colspan="2" class="text-muted">Total</td>
+                                <td class="text-end">@totalQty.ToString("N2")</td>
+                                <td class="text-end text-warning">@totalReserved.ToString("N2")</td>
+                                <td class="text-end">@((totalQty - totalReserved).ToString("N2"))</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                }
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            lucide.createIcons();
-        });
+        $(document).ready(function () { lucide.createIcons(); });
     </script>
 }

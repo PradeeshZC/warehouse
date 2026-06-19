@@ -15,6 +15,10 @@ namespace Warehouse.Models.Entities
         [StringLength(100)]
         public string SKU { get; set; } = string.Empty;
 
+        /// <summary>Unique barcode (EAN-13, UPC, QR, etc.). Nullable — not all products have a barcode.</summary>
+        [StringLength(100)]
+        public string? Barcode { get; set; }
+
         [StringLength(2000)]
         public string? Description { get; set; }
 

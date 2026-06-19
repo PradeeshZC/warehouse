@@ -16,17 +16,25 @@ namespace Warehouse.Data.Configurations
             builder.Property(p => p.Description).HasMaxLength(2000);
             builder.Property(p => p.UnitPrice).HasColumnType("decimal(18,4)").IsRequired();
 
-            builder.HasIndex(p => p.Name);
-            builder.HasIndex(p => p.CategoryId);
+            // SKU uniqueness enforced via Fluent API
+            builder.Property(p => p.SKU).HasMaxLength(100).IsRequired();
+            builder.HasIndex(p => p.SKU).IsUnique().HasDatabaseName("IX_Products_SKU");
+
+            // Barcode: unique but nullable (multiple nulls allowed via filtered index)
+            builder.Property(p => p.Barcode).HasMaxLength(100);
+            builder.HasIndex(p => p.Barcode)
+                   .IsUnique()
+                   .HasFilter("[Barcode] IS NOT NULL")
+                   .HasDatabaseName("IX_Products_Barcode");
+
+            // Performance indexes
+            builder.HasIndex(p => p.Name).HasDatabaseName("IX_Products_Name");
+            builder.HasIndex(p => p.CategoryId).HasDatabaseName("IX_Products_CategoryId");
 
             builder.HasOne(p => p.Category)
                 .WithMany(c => c.Products)
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // SKU uniqueness enforced via Fluent API
-            builder.Property(p => p.SKU).HasMaxLength(100).IsRequired();
-            builder.HasIndex(p => p.SKU).IsUnique();
         }
     }
 }
